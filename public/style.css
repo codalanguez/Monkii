@@ -99,6 +99,16 @@ input, textarea, select { font-family: inherit; font-size: inherit; color: var(-
 .status-bad i { background: var(--blood); box-shadow: 0 0 8px var(--blood); }
 .status-bad span { color: var(--blood); }
 
+.update-pill {
+  display: inline-block; margin-top: 6px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+  color: var(--ember-hot); text-decoration: none;
+  background: rgba(224,139,60,.12); border: 1px solid rgba(224,139,60,.4);
+  border-radius: 999px; padding: 2px 9px;
+  transition: background .15s, box-shadow .15s;
+}
+.update-pill:hover { background: rgba(224,139,60,.22); box-shadow: 0 0 12px rgba(224,139,60,.3); }
+
 .rail-section { padding: 14px 10px 6px; overflow-y: auto; }
 #chat-section { flex: 1; border-top: 1px solid var(--line-soft); margin-top: 6px; }
 

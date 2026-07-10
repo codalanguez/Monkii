@@ -390,6 +390,50 @@ function buildSystem(project, extraSkillIds) {
   return sections.join('\n\n---\n\n');
 }
 
+/* ---------------- Ollama update check ----------------
+ * Compares the running Ollama version against the latest GitHub release.
+ * Checked on startup, then cached for 24h; disable with
+ * CODEMONKII_UPDATE_CHECK=off (the only non-Ollama outbound call). */
+const UPDATE_CHECK = (process.env.CODEMONKII_UPDATE_CHECK || 'on').toLowerCase() !== 'off';
+const CACHE_OK = 24 * 60 * 60 * 1000;   // successful check: once a day
+const CACHE_FAIL = 15 * 60 * 1000;      // failed check: retry soon (Ollama may still be starting)
+let updateCache = { checkedAt: 0, ok: false, current: null, latest: null, updateAvailable: false, url: 'https://ollama.com/download' };
+let updateInFlight = null;
+
+function parseVer(v) {
+  const m = String(v || '').match(/(\d+)\.(\d+)\.(\d+)/);
+  return m ? [+m[1], +m[2], +m[3]] : null;
+}
+
+function checkOllamaUpdate() {
+  if (!UPDATE_CHECK) return Promise.resolve(updateCache);
+  const maxAge = updateCache.ok ? CACHE_OK : CACHE_FAIL;
+  if (Date.now() - updateCache.checkedAt < maxAge) return Promise.resolve(updateCache);
+  if (updateInFlight) return updateInFlight;
+  updateInFlight = (async () => {
+    try {
+      const cur = await (await fetch(`${OLLAMA}/api/version`, { signal: AbortSignal.timeout(2500) })).json();
+      const rel = await (await fetch('https://api.github.com/repos/ollama/ollama/releases/latest', {
+        headers: { 'User-Agent': 'CodeMonkii', Accept: 'application/vnd.github+json' },
+        signal: AbortSignal.timeout(6000),
+      })).json();
+      const current = cur.version;
+      const latest = String(rel.tag_name || '').replace(/^v/, '');
+      const cv = parseVer(current), lv = parseVer(latest);
+      const updateAvailable = !!(cv && lv &&
+        (lv[0] > cv[0] || (lv[0] === cv[0] && (lv[1] > cv[1] || (lv[1] === cv[1] && lv[2] > cv[2])))));
+      updateCache = { checkedAt: Date.now(), ok: true, current, latest, updateAvailable, url: 'https://ollama.com/download' };
+    } catch { /* offline or rate-limited — keep last result, retry after CACHE_FAIL */
+      updateCache = { ...updateCache, checkedAt: Date.now(), ok: false };
+    }
+    updateInFlight = null;
+    return updateCache;
+  })();
+  return updateInFlight;
+}
+
+app.get('/api/update-check', async (req, res) => res.json(await checkOllamaUpdate()));
+
 /* ---------------- Ollama proxy ---------------- */
 
 app.get('/api/health', async (req, res) => {
@@ -511,4 +555,8 @@ app.listen(PORT, '127.0.0.1', () => {
   console.log(`CodeMonkii running at http://localhost:${PORT}`);
   console.log(`Ollama host: ${OLLAMA}`);
   console.log(`Skills dir:  ${SKILLS_DIR}`);
+  checkOllamaUpdate().then(u => {
+    if (u.updateAvailable) console.log(`Ollama update available: ${u.current} -> ${u.latest} (${u.url})`);
+    else if (u.current) console.log(`Ollama ${u.current} is up to date`);
+  });
 });

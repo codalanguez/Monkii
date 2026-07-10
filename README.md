@@ -61,6 +61,7 @@ Attach any file or folder via the built-in browser. Contents are **re-read from 
 - Auto-detects Ollama at `http://localhost:11434` (override with `OLLAMA_HOST`; bind-style values like `0.0.0.0` are normalized automatically)
 - Model picker per chat, streaming responses, stop button
 - Health indicator in the sidebar
+- Update check on startup (cached daily): when a newer Ollama release exists, the server logs it and the sidebar shows a download pill — disable with `CODEMONKII_UPDATE_CHECK=off`
 
 ## Configuration
 
@@ -70,6 +71,7 @@ Attach any file or folder via the built-in browser. Contents are **re-read from 
 | `OLLAMA_HOST` | `http://localhost:11434` | Ollama server address |
 | `CODEMONKII_SKILLS_DIR` | `./skills` | Where to scan for skills |
 | `CODEMONKII_FS_ROOTS` | *(unset — whole disk)* | Semicolon-separated list of directories the file browser and attachments are restricted to, e.g. `C:\projects;D:\writing` |
+| `CODEMONKII_UPDATE_CHECK` | `on` | Set to `off` to disable the daily Ollama update check |
 
 ## Security
 
@@ -82,7 +84,7 @@ CodeMonkii is a single-user local app, hardened accordingly:
 - **Filesystem scoping** — set `CODEMONKII_FS_ROOTS` to fence browsing *and* attachment reads into specific directories; the check runs both when attaching and again on every read.
 - **Input validation** — project/skill ids are strictly validated (no path traversal), all model output is HTML-escaped before rendering, and errors return generic JSON with no stack traces.
 
-Your chats and project data stay in `data/` on your disk; the only outbound connections are to your local Ollama and Google Fonts (for the UI typefaces).
+Your chats and project data stay in `data/` on your disk; the only outbound connections are to your local Ollama, Google Fonts (UI typefaces), and one GitHub API call per day to check the latest Ollama release version (no data sent; `CODEMONKII_UPDATE_CHECK=off` disables it).
 
 ## Layout
 
