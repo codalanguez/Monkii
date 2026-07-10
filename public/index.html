@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeMonkii</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128018;</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== left rail: projects & chats ===== -->
+  <aside id="rail">
+    <header id="brand">
+      <div class="brand-mark">🐒</div>
+      <div>
+        <h1>Code<span>Monkii</span></h1>
+        <div id="ollama-status" class="status status-unknown"><i></i><span>checking Ollama…</span></div>
+      </div>
+    </header>
+
+    <div class="rail-section">
+      <div class="rail-label">
+        <span>Projects</span>
+        <button id="btn-new-project" class="icon-btn" title="New project">+</button>
+      </div>
+      <ul id="project-list"></ul>
+    </div>
+
+    <div class="rail-section" id="chat-section" hidden>
+      <div class="rail-label">
+        <span>Chats</span>
+        <button id="btn-new-chat" class="icon-btn" title="New chat">+</button>
+      </div>
+      <ul id="chat-list"></ul>
+    </div>
+
+    <footer id="rail-foot">
+      <span>local · private · yours</span>
+    </footer>
+  </aside>
+
+  <!-- ===== main: chat ===== -->
+  <main id="main">
+    <div id="welcome" class="welcome">
+      <div class="welcome-ember">🐒</div>
+      <h2>Your models. Your machine. Your mischief.</h2>
+      <p>Create a project, attach files from your machine, switch on skills, and talk to your local Ollama models — nothing ever leaves this computer.</p>
+      <button id="btn-welcome-project" class="btn btn-primary">Create your first project</button>
+      <div id="welcome-hint" class="welcome-hint" hidden></div>
+    </div>
+
+    <div id="chat-view" hidden>
+      <header id="chat-header">
+        <div class="chat-title-wrap">
+          <h2 id="chat-title">New chat</h2>
+          <span id="chat-project-name" class="chat-crumb"></span>
+        </div>
+        <div class="chat-header-controls">
+          <select id="model-select" title="Model"></select>
+          <button id="btn-toggle-inspector" class="icon-btn wide" title="Project settings">Project ⚙</button>
+        </div>
+      </header>
+
+      <div id="messages"></div>
+
+      <div id="composer">
+        <div id="skill-popup" hidden></div>
+        <div id="active-skill-chips"></div>
+        <div class="composer-box">
+          <textarea id="input" rows="1" placeholder="Message your model… ( / to invoke a skill )"></textarea>
+          <button id="btn-send" class="btn btn-primary" title="Send">Send</button>
+          <button id="btn-stop" class="btn btn-stop" title="Stop" hidden>Stop</button>
+        </div>
+        <div class="composer-hint">Enter to send · Shift+Enter for newline · <b>/</b> invokes a skill for this message</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== right: project inspector ===== -->
+  <aside id="inspector" hidden>
+    <header>
+      <h3>Project</h3>
+      <button id="btn-close-inspector" class="icon-btn" title="Close">×</button>
+    </header>
+
+    <label class="field">
+      <span>Name</span>
+      <input id="proj-name" type="text">
+    </label>
+
+    <label class="field">
+      <span>Instructions <em>system prompt for every chat</em></span>
+      <textarea id="proj-instructions" rows="6" placeholder="e.g. You are an editor for dark fiction. Always answer in Spanish…"></textarea>
+    </label>
+
+    <div class="field">
+      <span>Skills <em id="skills-dir-hint"></em></span>
+      <ul id="skill-list" class="toggle-list"></ul>
+    </div>
+
+    <div class="field">
+      <span>Knowledge <em>files &amp; folders read live from disk</em></span>
+      <ul id="attachment-list"></ul>
+      <button id="btn-browse" class="btn btn-ghost">+ Attach file or folder</button>
+    </div>
+
+    <button id="btn-delete-project" class="btn btn-danger-ghost">Delete project…</button>
+  </aside>
+
+  <!-- ===== file browser modal ===== -->
+  <div id="modal-backdrop" hidden>
+    <div id="file-browser">
+      <header>
+        <h3>Attach from this machine</h3>
+        <button id="btn-close-browser" class="icon-btn">×</button>
+      </header>
+      <div id="fb-path"></div>
+      <ul id="fb-entries"></ul>
+      <footer>
+        <button id="btn-fb-drives" class="btn btn-ghost">Drives</button>
+        <div class="spacer"></div>
+        <button id="btn-attach-dir" class="btn btn-primary">Attach this folder</button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast" hidden></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
