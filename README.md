@@ -89,8 +89,36 @@ Your chats and project data stay in `data/` on your disk; the only outbound conn
 ## Layout
 
 ```
-server.js        Express backend: Ollama proxy, projects, skills, fs browsing
-public/          Frontend (vanilla JS, no build step)
-skills/          Your skills (3 samples included)
-data/projects/   Project + chat storage (JSON, gitignored)
+server.js               entry point: middleware, routers, listen
+lib/
+  config.js             env + constants (ports, paths, context budgets)
+  security.js           Host/Origin validation, CSP, fs allowlist
+  store.js              project JSON persistence
+  skills.js             SKILL.md discovery + frontmatter parsing
+  attachments.js        reading knowledge from disk under byte budgets
+  prompt.js             system prompt assembly
+  ollama.js             Ollama HTTP client + release update check
+routes/
+  projects.js           projects / chats / attachments CRUD
+  skills.js             skill listing endpoints
+  fs.js                 file-browser directory listings
+  ollama.js             health, models, update check, streaming chat
+public/
+  index.html            single-page UI shell
+  style.css             midnight-workshop theme
+  js/                   ES modules, one per feature:
+    main.js             wiring + startup
+    state.js            shared client state
+    api.js              JSON fetch client
+    util.js             DOM helpers ($, esc, toast)
+    markdown.js         safe markdown renderer
+    status.js           health indicator, model list, update pill
+    projects.js         project lifecycle + inspector
+    skills.js           skill toggles + "/" invocation
+    attachments.js      knowledge panel + file browser
+    chat.js             messages, streaming, stop
+skills/                 your skills (3 samples included)
+data/projects/          project + chat storage (JSON, gitignored)
 ```
+
+Each module carries a header comment explaining its responsibility.
