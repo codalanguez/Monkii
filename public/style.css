@@ -310,11 +310,16 @@ input, textarea, select { font-family: inherit; font-size: inherit; color: var(-
 #composer { padding: 10px 26px 18px; max-width: 832px; margin: 0 auto; width: 100%; position: relative; }
 
 .composer-box {
-  display: flex; gap: 10px; align-items: flex-end;
+  display: flex; gap: 8px; align-items: flex-end;
   background: var(--obsidian); border: 1px solid var(--line); border-radius: 2px;
-  padding: 12px 12px 12px 18px;
+  padding: 12px 12px 12px 12px;
   transition: border-color .2s, box-shadow .2s;
 }
+.composer-attach {
+  flex-shrink: 0; width: 34px; height: 34px; border: none; font-size: 17px;
+  color: var(--bone-dim); align-self: flex-end;
+}
+.composer-attach:hover { color: var(--gold); border: none; box-shadow: none; }
 .composer-box:focus-within {
   border-color: var(--gold);
   box-shadow: 0 0 0 1px rgba(255, 212, 0, .25), 0 0 24px rgba(255, 212, 0, .08), 0 8px 30px rgba(0, 0, 0, .5);
