@@ -35,22 +35,37 @@ const { registerPrefsIpc } = require('./prefs-ipc');
 /**
  * One-time data migration for the CodeMonkii → Monkii rebrand. The productName
  * change moves per-user storage from %APPDATA%\CodeMonkii to %APPDATA%\Monkii,
- * so on the first Monkii launch — if the new folder has no data yet and the
- * old install's folder exists — copy the projects, skills, settings, and logs
- * over so nothing is orphaned. Runs before anything reads the storage paths.
+ * so on first Monkii launch — if a prior CodeMonkii install exists — copy the
+ * projects, skills, settings, and logs over so nothing is orphaned.
+ *
+ * Copies file-by-file, never overwriting anything the new install already has,
+ * and only writes the `.migrated` marker if every file copied cleanly — so a
+ * partial run (e.g. a momentarily locked file) is retried on the next launch
+ * rather than silently leaving data behind. Runs before storage paths are read.
  */
 function migrateLegacyData() {
   if (!app.isPackaged) return; // dev keeps its data repo-local
   try {
     const oldDir = path.join(app.getPath('appData'), 'CodeMonkii');
     const newDir = app.getPath('userData'); // %APPDATA%\Monkii
-    const alreadyMigrated = fs.existsSync(path.join(newDir, 'data')) || fs.existsSync(path.join(newDir, 'settings.json'));
-    if (!fs.existsSync(oldDir) || alreadyMigrated) return;
+    const marker = path.join(newDir, '.migrated');
+    if (!fs.existsSync(oldDir) || fs.existsSync(marker)) return;
+
+    let failures = 0;
+    const copyInto = (src, dst) => {
+      if (!fs.existsSync(src)) return;
+      if (fs.statSync(src).isDirectory()) {
+        fs.mkdirSync(dst, { recursive: true });
+        for (const name of fs.readdirSync(src)) copyInto(path.join(src, name), path.join(dst, name));
+      } else if (!fs.existsSync(dst)) {
+        try { fs.copyFileSync(src, dst); } catch { failures++; }
+      }
+    };
     for (const item of ['data', 'skills', 'settings.json', 'logs']) {
-      const src = path.join(oldDir, item);
-      if (fs.existsSync(src)) fs.cpSync(src, path.join(newDir, item), { recursive: true });
+      copyInto(path.join(oldDir, item), path.join(newDir, item));
     }
-  } catch { /* best-effort: a failed migration just starts fresh, no data lost */ }
+    if (failures === 0) fs.writeFileSync(marker, new Date().toISOString());
+  } catch { /* best-effort: a failed migration just retries; no data lost */ }
 }
 
 function createWindow() {
