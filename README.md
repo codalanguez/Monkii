@@ -137,6 +137,55 @@ Your chats and project data stay on your disk. UI fonts are bundled locally (no 
 
 The desktop shell adds its own hardening: sandboxed renderer with context isolation, a navigation guard (the window can only ever display the app — external links open in your real browser), all web permission requests (camera, mic, location…) denied, and preferences IPC that only accepts calls from the app's own pages.
 
+## Roadmap
+
+The guiding rule for everything below: **it stays local.** Nothing here should ever require an account, a cloud service, or sending your data off the machine.
+
+### Shipped
+
+- [x] Projects, chats, and quick chat (no project needed)
+- [x] Claude-format skills: always-on toggles + `/` per-message invocation
+- [x] Create skills three ways — blank template, written by a local model, or imported (folder / `SKILL.md` / packaged `.skill`)
+- [x] Skill detail view (instructions + bundled reference files)
+- [x] Per-project model settings — context length, temperature, and the full advanced Ollama option set
+- [x] Live file & directory knowledge, re-read from disk each message
+- [x] Right-click menus and native text-field editing
+- [x] Signed Windows desktop app with an installer; per-user data in `%APPDATA%`
+
+### Next up
+
+- [ ] **Model management in-app** — pull, delete, and see disk usage for Ollama models without dropping to a terminal
+- [ ] **Edit / regenerate / branch** messages, and copy a whole conversation as Markdown
+- [ ] **Export & import** a project (skills, knowledge refs, and settings) as a single portable file
+- [ ] **Search** across chats and projects
+- [ ] **Token & context awareness** — a live count and a warning before a request overflows the chosen context length
+- [ ] **Per-chat option overrides** on top of the project defaults
+- [ ] **Auto-update** for the desktop app (`electron-updater`)
+
+### Appearance & theming
+
+Right now the UI ships one look — the cyber-deco dark theme (gold on black, Forum / VT323 type). Making it yours is next:
+
+- [ ] **Theme presets** — pick from a set of built-in palettes (e.g. Cyber Deco, Speakeasy Noir, Gothic Library, plain Midnight), swappable from Preferences
+- [ ] **Light / dark / system** mode toggle
+- [ ] **Custom palette editor** — set your own accent, background, surface, and text colors, with a live preview and contrast check
+- [ ] **Font choices** — pick the display, body, and mono typefaces (bundled options plus any font installed on your machine)
+- [ ] **Background options** — solid color, subtle gradient, or a local image, all rendered offline
+- [ ] **Density & size** — comfortable/compact spacing and a base text-size control
+- [ ] **Save & share themes** — export a theme as a small file and import someone else's (local-first, no gallery required)
+
+Themes persist per-user like the other preferences, and — like everything else — never phone home.
+
+### Exploring
+
+- [ ] **Image input** for multimodal models (llava, etc.)
+- [ ] **Embeddings-backed knowledge** — retrieve from large folders instead of spending a flat byte budget
+- [ ] **A skill "shelf"** for browsing and one-click installing shared `.skill` packs
+- [ ] **macOS & Linux builds**
+- [ ] **Voice** in and out, entirely on-device
+
+Have an idea? Open an issue — local-first, private-by-default proposals move to the top.
+
 ## Layout
 
 ```
