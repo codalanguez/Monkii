@@ -18,6 +18,8 @@ Have an idea? Open an issue — local-first, private-by-default proposals move t
 - [x] Error logging to a rotating file (open it from the app menu)
 - [x] Signed Windows desktop app with an installer; per-user data in `%APPDATA%`
 - [x] Rebrand to Monkii (`appId` `com.codalanguez.monkii`) with a one-time data migration from the old install
+- [x] **Local retrieval over big knowledge** — a large attachment (manuscript or codebase) is embedded on-device (via Ollama) and only the passages relevant to your question are injected; small attachments are still included whole, an embed model is auto-detected, and it all runs offline (falls back to the plain dump when no embed model is present)
+- [x] **Attachment reads cached** by size + modified-time, so unchanged knowledge isn't re-read from disk on every message
 
 ## More local
 
@@ -25,9 +27,7 @@ Have an idea? Open an issue — local-first, private-by-default proposals move t
 
 - [ ] **Version check off by default** — the daily Ollama-release ping to GitHub is the *only* thing that leaves the machine (it sends no data). Make it opt-in so "nothing leaves" is literally true on a fresh install
 - [ ] **Self-contained Ollama** — run (and ideally ship) the Ollama runtime so Monkii works without a separate Ollama install. It already auto-starts `ollama serve` when Ollama is present; the gap is when it isn't. Tradeoff from investigation: the `ollama` binary is only ~34 MB, but the GPU runtimes (CUDA/ROCm) are ~2.8 GB, so full bundling would balloon the installer — likely path is to ship the small binary + CPU backend and fetch the GPU runtime on first run, with models still stored separately
-- [ ] **Local retrieval over big knowledge** — on-device embeddings so a large attachment (a whole manuscript or codebase) is *searched* for the relevant passages instead of dumped into every prompt. Fixes context overflow properly, entirely offline
 - [ ] **First-run model bootstrap** — offer a one-click pull of a small default model so a clean install can chat immediately instead of showing "no models"
-- [ ] **Cache attachment reads** — a large attachment is re-read and re-estimated from disk on every message; cache by modified-time so freshness stays but the work doesn't repeat
 
 ## More secure
 

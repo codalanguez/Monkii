@@ -84,13 +84,16 @@ router.get('/update-check', async (req, res) => res.json(await ollama.checkOllam
 /* Estimated token cost of the fixed part of a request (system prompt +
  * history), plus the context limit, so the composer can warn before overflow.
  * Cheap heuristic — see lib/tokens. */
-router.post('/context', (req, res) => {
+router.post('/context', async (req, res) => {
   const { projectId, chatId, skillIds = [] } = req.body;
   try {
     const project = loadProject(projectId);
     const chat = project.chats.find(c => c.id === chatId);
     if (!chat) throw new Error('chat not found');
-    const system = buildSystem(project, skillIds, chat);
+    // use the latest user turn as the retrieval query so the estimate reflects
+    // the retrieval-capped size (not a full dump) for big attachments
+    const lastUser = [...chat.messages].reverse().find(m => m.role === 'user');
+    const system = await buildSystem(project, skillIds, chat, lastUser ? lastUser.content : '');
     const history = chat.messages.slice(-HISTORY_LIMIT).map(m => m.content).join('\n');
     const systemTokens = estimateTokens(system);
     const baseTokens = systemTokens + estimateTokens(history);
@@ -119,7 +122,7 @@ router.post('/chat', async (req, res) => {
   chat.model = model;
   saveProject(project);
 
-  const system = buildSystem(project, skillIds, chat);
+  const system = await buildSystem(project, skillIds, chat, message);
   const history = chat.messages.slice(-HISTORY_LIMIT).map(m => ({ role: m.role, content: m.content }));
 
   // Compact to fit the context: drop the oldest history messages until the
