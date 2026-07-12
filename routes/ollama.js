@@ -17,6 +17,7 @@ const { estimateTokens } = require('../lib/tokens');
 const { logError } = require('../lib/log');
 const { pipeNdjson } = require('../lib/stream');
 const ollama = require('../lib/ollama');
+const { embedStatus } = require('../lib/retrieval');
 
 const router = express.Router();
 
@@ -80,6 +81,13 @@ router.delete('/models', async (req, res) => {
 });
 
 router.get('/update-check', async (req, res) => res.json(await ollama.checkOllamaUpdate()));
+
+/* Whether an embedding model (for large-attachment retrieval) is installed,
+ * plus the recommended one to pull if not. */
+router.get('/embed-status', async (req, res) => {
+  try { res.json(await embedStatus()); }
+  catch { res.json({ installed: false, name: null, recommended: 'nomic-embed-text' }); }
+});
 
 /* Estimated token cost of the fixed part of a request (system prompt +
  * history), plus the context limit, so the composer can warn before overflow.

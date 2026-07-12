@@ -68,6 +68,32 @@ async function promptOllamaUpdate({ current, latest, url } = {}) {
   return 'later';
 }
 
+/**
+ * First-run offer to download the embedding model that powers offline
+ * large-attachment search. Returns 'download' | 'later' | 'dismissed'.
+ * "Don't ask again" is remembered so we never nag.
+ */
+async function promptEmbedModel({ recommended, size } = {}) {
+  if (loadSettings().dismissedEmbedPrompt) return 'dismissed';
+  const model = recommended || 'nomic-embed-text';
+  const { response, checkboxChecked } = await dialog.showMessageBox(runtime.win, {
+    type: 'question',
+    title: 'Monkii — offline attachment search',
+    message: 'Enable searching large attachments?',
+    detail: `Monkii can embed big attachments (a whole manuscript or codebase) on your machine, so only the passages relevant to your question go into each prompt — entirely offline. ` +
+      `It needs a small embedding model, ${model}${size ? ` (~${size})` : ''}, downloaded once via Ollama.\n\n` +
+      `Without it, large attachments still work — they're just truncated to fit the context.`,
+    buttons: ['Download', 'Not now'],
+    defaultId: 0,
+    cancelId: 1,
+    checkboxLabel: "Don't ask again",
+    checkboxChecked: false,
+    noLink: true,
+  });
+  if (checkboxChecked) saveSettings({ dismissedEmbedPrompt: true });
+  return response === 0 ? 'download' : 'later';
+}
+
 /** Save a storage patch, restart the server on it, refresh dependent UI. */
 async function applyStorageChange(patch) {
   saveSettings(patch);
@@ -106,6 +132,7 @@ function registerPrefsIpc() {
   handleUI('prefs:reset-skills-dir', () => applyStorageChange({ skillsDir: undefined }));
 
   handleUI('ollama:update-prompt', (info) => promptOllamaUpdate(info));
+  handleUI('ollama:embed-prompt', (info) => promptEmbedModel(info));
 }
 
 module.exports = { registerPrefsIpc };
