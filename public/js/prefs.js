@@ -37,6 +37,11 @@ function render(prefs) {
     prefs.skillsDir + (prefs.skillsDirCustom ? '' : '  (default)'), prefs.skillsDirEnv);
 
   renderFsAccess(prefs);
+
+  const upEnv = prefs.updateCheckEnv;
+  $('#prefs-update-check').checked = prefs.updateCheck;
+  $('#prefs-update-check').disabled = Boolean(upEnv);
+  $('#prefs-update-env-note').hidden = !upEnv;
 }
 
 /** The file-access allowlist: whole-disk banner, or a removable list of folders. */
@@ -100,4 +105,7 @@ export function initPrefs() {
   wireAction('#btn-prefs-fs-add', () => bridge.addFsRoot());
   wireAction('#btn-prefs-fs-all', () => bridge.fsWholeDisk());
   wireAction('#btn-prefs-fs-home', () => bridge.fsResetHome());
+
+  // toggling restarts the server (config reads the flag at boot) and reloads
+  $('#prefs-update-check').addEventListener('change', (e) => bridge.setUpdateCheck(e.target.checked));
 }

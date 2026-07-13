@@ -43,4 +43,7 @@ contextBridge.exposeInMainWorld('monkii', {
   removeFsRoot: (p) => ipcRenderer.invoke('prefs:fs-remove-root', p),
   fsWholeDisk: () => ipcRenderer.invoke('prefs:fs-whole-disk'),
   fsResetHome: () => ipcRenderer.invoke('prefs:fs-reset-home'),
+
+  /** Daily Ollama update check (opt-in) — restarts the server. */
+  setUpdateCheck: (on) => ipcRenderer.invoke('prefs:set-update-check', on),
 });

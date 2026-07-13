@@ -183,7 +183,7 @@ The system prompt stays constant as the conversation grows. With the old dump it
 - Auto-detects Ollama at `http://localhost:11434` (override with `OLLAMA_HOST`; bind-style values like `0.0.0.0` are normalized automatically)
 - Model picker per chat, streaming responses, stop button
 - Health indicator in the sidebar
-- Update check on startup (cached daily): when a newer Ollama release exists, the sidebar shows a download pill and (in the desktop app) a popup offers to download it — disable with `MONKII_UPDATE_CHECK=off`
+- Update check (**off by default, opt-in**): when enabled, a cached daily check notices a newer Ollama release and shows a download pill plus (in the desktop app) a popup offering to download it. Turn it on in Preferences → Update check, or `MONKII_UPDATE_CHECK=on`
 
 ## Configuration
 
@@ -193,7 +193,7 @@ The system prompt stays constant as the conversation grows. With the old dump it
 | `OLLAMA_HOST` | `http://localhost:11434` | Ollama server address |
 | `MONKII_SKILLS_DIR` | `./skills` | Where to scan for skills |
 | `MONKII_FS_ROOTS` | *(unset)* | Semicolon-separated list of directories the file browser and attachments are restricted to, e.g. `C:\projects;D:\writing`. When unset, the **desktop app fences to your home folder** by default (manage it in Preferences → File access); a repo checkout (`npm start`) is whole-disk unless you set this. |
-| `MONKII_UPDATE_CHECK` | `on` | Set to `off` to disable the daily Ollama update check |
+| `MONKII_UPDATE_CHECK` | `off` | Set to `on` to enable the daily Ollama-release check (opt-in; the only thing that ever leaves the machine). In the desktop app, toggle it in Preferences → Update check. |
 | `MONKII_RETRIEVAL` | `on` | Set to `off` to always include attachments whole (no embedding/retrieval) |
 | `MONKII_EMBED_MODEL` | *(auto-detect)* | Force a specific Ollama embedding model; otherwise the first installed embed model is used |
 | `MONKII_EMBED_DIR` | *(beside data dir)* | Where the on-disk embedding indexes are stored |
@@ -210,7 +210,7 @@ Monkii is a single-user local app, hardened accordingly:
 - **Input validation** — project/skill ids are strictly validated (no path traversal), all model output is HTML-escaped before rendering, and errors return generic JSON with no stack traces.
 - **On-disk retrieval cache** — when a large attachment is searched (see [retrieval](#large-attachments-retrieval-instead-of-overflow)), its embedding index is written under `EMBED_DIR` (default beside your data dir; `%APPDATA%\Monkii\embeddings` for the installed app). That index contains the chunked source **text in plaintext**, like your chats — so it's gitignored, deleted when you detach the attachment or delete the project, and size-capped (least-recently-used eviction). `MONKII_RETRIEVAL=off` disables it entirely, and directory junctions inside an attached folder can't escape `MONKII_FS_ROOTS`.
 
-Your chats and project data stay on your disk. UI fonts are bundled locally (no Google Fonts requests), so the only outbound connections are to your local Ollama and one GitHub API call per day to check the latest Ollama release version (no data sent; `MONKII_UPDATE_CHECK=off` disables it — then nothing leaves your machine at all).
+Your chats and project data stay on your disk. UI fonts are bundled locally (no Google Fonts requests), so out of the box the **only** outbound connection is to your local Ollama — nothing leaves your machine. The one optional exception is a daily Ollama-version check to GitHub, which is **off by default** (no data sent even when on); enable it in Preferences → Update check or with `MONKII_UPDATE_CHECK=on`.
 
 The desktop shell adds its own hardening: sandboxed renderer with context isolation, a navigation guard (the window can only ever display the app — external links open in your real browser), all web permission requests (camera, mic, location…) denied, and preferences IPC that only accepts calls from the app's own pages.
 

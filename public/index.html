@@ -334,6 +334,18 @@
           </div>
           <div class="prefs-note">By default Monkii can only read inside your home folder. Add a folder to allow attachments from elsewhere (e.g. a projects drive), or allow the whole disk. Changing this restarts the app view.</div>
         </div>
+
+        <div class="field">
+          <span>Update check <em>look for newer Ollama releases</em></span>
+          <label class="prefs-toggle">
+            <input type="checkbox" id="prefs-update-check">
+            <span>Check GitHub daily for a newer Ollama version</span>
+          </label>
+          <div id="prefs-update-env-note" class="prefs-note" hidden>
+            Set by the <b>MONKII_UPDATE_CHECK</b> environment variable — it overrides this preference.
+          </div>
+          <div class="prefs-note"><b>Off by default.</b> This is the only thing Monkii ever sends off your machine — a version check to GitHub, with no data about you or your chats. Enable it to get update notifications. Changing this restarts the app view.</div>
+        </div>
       </div>
     </div>
   </div>

@@ -8,10 +8,9 @@ Have an idea? Open an issue — local-first, private-by-default proposals move t
 
 The current focus, in priority order (details in the sections below):
 
-1. **Version check off by default** — make the daily Ollama-release ping opt-in so "nothing leaves" is literally true on a fresh install
-2. **Untrusted-attachment awareness** — mark attachment/retrieved content as untrusted data to blunt prompt injection
+1. **Untrusted-attachment awareness** — mark attachment/retrieved content as untrusted data to blunt prompt injection
 
-*(Shipped from this list: first-run chat-model bootstrap, background indexing with progress, file browser fenced by default.)*
+*(Shipped from this list: first-run chat-model bootstrap, background indexing with progress, file browser fenced by default, version check off by default.)*
 
 ## Shipped
 
@@ -36,12 +35,12 @@ The current focus, in priority order (details in the sections below):
 - [x] **First-run chat-model bootstrap** — on a clean install with no models, Monkii offers to pull a small default chat model (`llama3.2`) so you can start chatting immediately (mirrors the embedding-model bootstrap; both share one flow)
 - [x] **Background indexing with progress** — a large attachment starts embedding in the background the moment you attach it, with an "indexing %" badge on the attachment, so the first message no longer waits on the (~90 s for a 2 MB manuscript) build; if you send before it's ready, that send still reuses the same in-flight build
 - [x] **File browser fenced by default** — the desktop app confines the file browser and attachment reads to your **home folder** out of the box; widen it in **Preferences → File access** (add folders, or allow the whole disk). `MONKII_FS_ROOTS` still overrides, symlink/junction escapes are blocked, and a repo checkout (`npm start`) stays whole-disk unless you set the env var
+- [x] **Update check off by default** — the daily Ollama-release ping to GitHub is now opt-in (off on a fresh install), so out of the box nothing leaves your machine at all; enable it in **Preferences → Update check** (or `MONKII_UPDATE_CHECK=on`)
 
 ## More local
 
 *Install it, and it works and stays entirely on your machine — no separate installs, no calls out, no dependency you didn't choose.*
 
-- [ ] **Version check off by default** — the daily Ollama-release ping to GitHub is the *only* thing that leaves the machine (it sends no data). Make it opt-in so "nothing leaves" is literally true on a fresh install
 - [ ] **Self-contained Ollama** — run (and ideally ship) the Ollama runtime so Monkii works without a separate Ollama install. It already auto-starts Ollama when it's installed (via the desktop app when present, else a hidden `ollama serve`); the gap is when it isn't installed at all. Tradeoff from investigation: the `ollama` binary is only ~34 MB, but the GPU runtimes (CUDA/ROCm) are ~2.8 GB, so full bundling would balloon the installer — likely path is to ship the small binary + CPU backend and fetch the GPU runtime on first run, with models still stored separately
 - [ ] **Compact the embedding index** — vectors are currently stored as JSON floats, making a single index ~12–17× the source text (34 MB for a 2 MB doc). The index *directory* is already size-capped (LRU eviction), so total disk is bounded; this item is about shrinking each index — store vectors as binary Float32 to cut it roughly 10×
 

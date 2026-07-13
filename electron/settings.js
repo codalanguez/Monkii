@@ -83,6 +83,12 @@ function fsRootsEnvValue() {
   return os.homedir();
 }
 
+/* Daily Ollama update check — opt-in, off unless the user enables it (or the
+ * ambient env var forces it). The one thing that would ever leave the machine. */
+const updateCheckEnabled = () => (process.env.MONKII_UPDATE_CHECK !== undefined)
+  ? process.env.MONKII_UPDATE_CHECK.toLowerCase() === 'on'
+  : Boolean(loadSettings().updateCheck);
+
 /** Env block handed to the forked server. Seeds the bundled sample skills
  *  into a fresh skills folder when packaged (never overwriting files). */
 function storageEnv() {
@@ -99,10 +105,11 @@ function storageEnv() {
     MONKII_SKILLS_DIR: skillsDir,
     MONKII_LOG_DIR: logDir(),
     MONKII_FS_ROOTS: fsRootsEnvValue(),
+    MONKII_UPDATE_CHECK: updateCheckEnabled() ? 'on' : 'off',
   };
 }
 
 module.exports = {
   loadSettings, saveSettings, defaultStorage, effectiveStorage, storageEnv, logDir,
-  fsRootsList, fsWholeDisk,
+  fsRootsList, fsWholeDisk, updateCheckEnabled,
 };

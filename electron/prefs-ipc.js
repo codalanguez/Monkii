@@ -12,7 +12,7 @@
 const { ipcMain, dialog, shell } = require('electron');
 const os = require('os');
 const runtime = require('./runtime');
-const { loadSettings, saveSettings, effectiveStorage, fsRootsList, fsWholeDisk } = require('./settings');
+const { loadSettings, saveSettings, effectiveStorage, fsRootsList, fsWholeDisk, updateCheckEnabled } = require('./settings');
 const { pickFolder } = require('./dialogs');
 const { restartServer } = require('./server');
 const { buildMenu } = require('./menu');
@@ -37,6 +37,9 @@ function prefsSummary() {
     fsWholeDisk: fsWholeDisk(),
     fsHome: os.homedir(),
     fsRootsEnv: process.env.MONKII_FS_ROOTS ?? null,
+    // daily Ollama update check (opt-in)
+    updateCheck: updateCheckEnabled(),
+    updateCheckEnv: process.env.MONKII_UPDATE_CHECK ?? null,
   };
 }
 
@@ -188,6 +191,8 @@ function registerPrefsIpc() {
   });
   handleUI('prefs:fs-whole-disk', () => applyStorageChange({ fsRoots: 'all' }));
   handleUI('prefs:fs-reset-home', () => applyStorageChange({ fsRoots: undefined }));
+
+  handleUI('prefs:set-update-check', (on) => applyStorageChange({ updateCheck: Boolean(on) }));
 
   handleUI('ollama:update-prompt', (info) => promptOllamaUpdate(info));
   handleUI('ollama:embed-prompt', (info) => promptEmbedModel(info));

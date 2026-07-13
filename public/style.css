@@ -785,6 +785,9 @@ input, textarea, select { font-family: inherit; font-size: inherit; color: var(-
 .prefs-fs-list li .att-path { flex: 1; overflow-x: auto; white-space: nowrap; }
 .prefs-fs-list li button { background: none; border: none; color: var(--bone-dim); cursor: pointer; font-size: 14px; }
 .prefs-fs-list li button:hover { color: var(--red-bright); }
+.prefs-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13.5px; color: var(--bone); }
+.prefs-toggle input { width: 16px; height: 16px; accent-color: var(--gold); cursor: pointer; }
+.prefs-toggle:has(input:disabled) { opacity: .5; cursor: default; }
 
 /* ============ context menu ============ */
 #ctx-menu {
