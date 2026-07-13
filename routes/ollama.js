@@ -22,6 +22,20 @@ const pkg = require('../package.json');
 
 const router = express.Router();
 
+/* A dropped/reset connection to Ollama's model runner — or an explicit
+ * out-of-memory — almost always means the runner crashed, usually because the
+ * KV cache for the chosen context length didn't fit the GPU. Ollama surfaces
+ * this as cryptic socket text ("wsarecv: ... forcibly closed", "connection
+ * reset", "llama runner process has terminated"); translate any of them into
+ * one honest, actionable message. */
+const RUNNER_CRASH_RE = /wsarecv|forcibly closed|connection reset|econnreset|broken pipe|runner (process )?has terminated|llama runner|exit status|unexpected eof|out of memory|cudamalloc|cuda error|insufficient memory|failed to allocate/i;
+const looksLikeRunnerCrash = (s) => typeof s === 'string' && RUNNER_CRASH_RE.test(s);
+function runnerCrashMessage(model, ctxN) {
+  const ctxNote = ctxN ? ` (context length is ${ctxN >= 1024 ? Math.round(ctxN / 1024) + 'k' : ctxN})` : '';
+  return `${model}'s model runner ran out of GPU memory and crashed${ctxNote}. ` +
+    `Lower the context length in Model settings, pick a smaller model, or close other GPU apps.`;
+}
+
 /* App metadata for the About dialog. `buildDate` is baked into the packaged
  * package.json by scripts/build-info.js; absent in a dev checkout. */
 router.get('/about', (req, res) => {
@@ -216,6 +230,11 @@ router.post('/chat', async (req, res) => {
     let detail = errText;
     try { detail = JSON.parse(errText).error || errText; } catch { /* raw */ }
     logError(`chat "${model}" — Ollama ${upstream.status}`, detail);
+    // The runner can die during model load (KV cache won't fit the GPU); Ollama
+    // reports that as a 500 with raw socket text. Replace it with a clear cause.
+    if (looksLikeRunnerCrash(detail)) {
+      return res.status(502).json({ error: runnerCrashMessage(model, clean.num_ctx) });
+    }
     return res.status(upstream.status).json({ error: detail || `Ollama error ${upstream.status}` });
   }
 

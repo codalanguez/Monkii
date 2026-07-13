@@ -21,6 +21,15 @@ import { renderChatAttachments } from './attachments.js';
 
 const THINKING_DOTS = '<span class="thinking-dots"><i></i><i></i><i></i></span>';
 
+// A runner that crashes mid-generation surfaces as raw Ollama socket text
+// forwarded straight through the stream. Translate that to a plain-language
+// cause. (The server already rewrites load-time crashes, whose message no
+// longer contains these keywords, so this won't touch it.)
+const RUNNER_CRASH_RE = /wsarecv|forcibly closed|connection reset|broken pipe|runner (process )?has terminated|llama runner|out of memory|cuda error|failed to allocate/i;
+const humanizeError = (msg) => RUNNER_CRASH_RE.test(msg || '')
+  ? "The model's runner ran out of GPU memory and crashed. Lower the context length in Model settings, pick a smaller model, or close other GPU apps."
+  : msg;
+
 /** Toggle streaming state and the send/stop button pair together. */
 function setStreaming(on) {
   state.streaming = on;
@@ -214,7 +223,7 @@ export async function send(bypassOverflow = false) {
     if (e.name === 'AbortError') {
       body.innerHTML = md(acc) + '<p><em>— stopped —</em></p>';
     } else {
-      body.innerHTML = `<p style="color:var(--blood)">⚠ ${esc(e.message)}</p>`;
+      body.innerHTML = `<p style="color:var(--blood)">⚠ ${esc(humanizeError(e.message))}</p>`;
     }
   }
   box.scrollTop = box.scrollHeight;
