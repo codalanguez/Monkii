@@ -23,6 +23,7 @@ Have an idea? Open an issue — local-first, private-by-default proposals move t
 - [x] **Embedding-model bootstrap** — on first run, if no embed model is installed, Monkii offers to download the recommended one (`nomic-embed-text`) via Ollama, so large-attachment search works out of the box
 - [x] **Quiet, self-managing Ollama** — Monkii starts Ollama through its desktop app (or a hidden-console `ollama serve`), so loading a model no longer pops terminal windows on Windows
 - [x] **Ollama update prompt** — a native "a newer Ollama is available" popup (with a per-version "don't remind me"), alongside the status-bar pill
+- [x] **Retrieval index is private & self-cleaning** — the on-disk embedding index (which holds chunked attachment text in plaintext) is deleted when you detach the attachment or delete the project, the index directory is size-capped with least-recently-used eviction, and it's gitignored; `MONKII_RETRIEVAL=off` writes none at all
 
 ## More local
 
@@ -32,13 +33,13 @@ Have an idea? Open an issue — local-first, private-by-default proposals move t
 - [ ] **Self-contained Ollama** — run (and ideally ship) the Ollama runtime so Monkii works without a separate Ollama install. It already auto-starts Ollama when it's installed (via the desktop app when present, else a hidden `ollama serve`); the gap is when it isn't installed at all. Tradeoff from investigation: the `ollama` binary is only ~34 MB, but the GPU runtimes (CUDA/ROCm) are ~2.8 GB, so full bundling would balloon the installer — likely path is to ship the small binary + CPU backend and fetch the GPU runtime on first run, with models still stored separately
 - [ ] **First-run chat-model bootstrap** — offer a one-click pull of a small default *chat* model so a clean install can start chatting immediately instead of showing "no models" (the embedding model is already offered automatically — see Shipped)
 - [ ] **Background indexing with progress** — the first embed of a very large attachment blocks the first message (~90 s for a ~2 MB manuscript on an RTX 3070). Index on attach, in the background, with a visible progress indicator, so the chat is never held up
-- [ ] **Compact the embedding index** — vectors are currently stored as JSON floats, making the on-disk index ~12–17× the source text (34 MB for a 2 MB doc). Store them as binary Float32 to cut that roughly 10×
+- [ ] **Compact the embedding index** — vectors are currently stored as JSON floats, making a single index ~12–17× the source text (34 MB for a 2 MB doc). The index *directory* is already size-capped (LRU eviction), so total disk is bounded; this item is about shrinking each index — store vectors as binary Float32 to cut it roughly 10×
 
 ## More secure
 
 *The base is already strong — loopback-only, Host/Origin checks, CSP, a sandboxed renderer, path confinement. These push from "safe by design" to "safe by default, and defensible to hand to someone else."*
 
-- [ ] **Fence the file browser by default** — the `MONKII_FS_ROOTS` allowlist exists but is opt-in, so browsing and attachments can currently reach the whole disk. Default it to your user profile with a one-click widen
+- [ ] **Fence the file browser by default** — the `MONKII_FS_ROOTS` allowlist exists but is opt-in, so browsing and attachments can currently reach the whole disk. Default it to your user profile with a one-click widen. *(Symlink/junction escapes inside an allowed folder are already blocked when the allowlist is set — this item is just about making the fence the default.)*
 - [ ] **Encryption at rest** — chats, projects, and the retrieval indexes (which hold chunked attachment text) are plaintext JSON (great for inspection, less so on an unencrypted disk). Add an optional encrypted data folder, or surface a clear "enable device encryption" note in Preferences
 - [ ] **CA-signed certificate** — the installer is signed but self-signed, so other machines still see "unknown publisher." A CA cert (e.g. Azure Trusted Signing) removes the SmartScreen warning for anyone you share it with
 - [ ] **Untrusted-attachment awareness** — attached files and imported skills feed straight into the prompt, so a hostile document could steer the model. Wrap attachment content as clearly-marked untrusted data and flag skills/files that read like instructions
