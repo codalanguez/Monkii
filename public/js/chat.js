@@ -25,7 +25,8 @@ const THINKING_DOTS = '<span class="thinking-dots"><i></i><i></i><i></i></span>'
 // forwarded straight through the stream. Translate that to a plain-language
 // cause. (The server already rewrites load-time crashes, whose message no
 // longer contains these keywords, so this won't touch it.)
-const RUNNER_CRASH_RE = /wsarecv|forcibly closed|connection reset|broken pipe|runner (process )?has terminated|llama runner|out of memory|cuda error|failed to allocate/i;
+// Keep this pattern identical to RUNNER_CRASH_RE in routes/ollama.js.
+const RUNNER_CRASH_RE = /wsarecv|forcibly closed|connection reset|econnreset|broken pipe|runner (process )?has terminated|llama runner|exit status|unexpected eof|out of memory|cudamalloc|cuda error|insufficient memory|failed to allocate/i;
 const humanizeError = (msg) => RUNNER_CRASH_RE.test(msg || '')
   ? "The model's runner ran out of GPU memory and crashed. Lower the context length in Model settings, pick a smaller model, or close other GPU apps."
   : msg;

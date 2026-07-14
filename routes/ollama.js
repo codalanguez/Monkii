@@ -28,10 +28,16 @@ const router = express.Router();
  * this as cryptic socket text ("wsarecv: ... forcibly closed", "connection
  * reset", "llama runner process has terminated"); translate any of them into
  * one honest, actionable message. */
+// keep RUNNER_CRASH_RE in sync with public/js/chat.js (server catches
+// load-time crashes; the client copy catches mid-generation ones).
 const RUNNER_CRASH_RE = /wsarecv|forcibly closed|connection reset|econnreset|broken pipe|runner (process )?has terminated|llama runner|exit status|unexpected eof|out of memory|cudamalloc|cuda error|insufficient memory|failed to allocate/i;
 const looksLikeRunnerCrash = (s) => typeof s === 'string' && RUNNER_CRASH_RE.test(s);
+
+/* Format a context length for a message: 16384 → "16k", 900 → "900". */
+const fmtCtx = (n) => (n >= 1024 ? Math.round(n / 1024) + 'k' : String(n));
+
 function runnerCrashMessage(model, ctxN) {
-  const ctxNote = ctxN ? ` (context length is ${ctxN >= 1024 ? Math.round(ctxN / 1024) + 'k' : ctxN})` : '';
+  const ctxNote = ctxN ? ` (context length is ${fmtCtx(ctxN)})` : '';
   return `${model}'s model runner ran out of GPU memory and crashed${ctxNote}. ` +
     `Lower the context length in Model settings, pick a smaller model, or close other GPU apps.`;
 }
@@ -189,7 +195,7 @@ router.post('/chat', async (req, res) => {
   if (!fits(history)) {
     const needK = Math.max(1, Math.round((sysTokens + estimateTokens(history[history.length - 1]?.content || '')) / 1000));
     return res.status(413).json({
-      error: `This request needs about ${needK}k tokens but the context length is set to ${limit >= 1024 ? Math.round(limit / 1024) + 'k' : limit}. Raise the context length in Model settings, use a model with a larger context, or attach less.`,
+      error: `This request needs about ${needK}k tokens but the context length is set to ${fmtCtx(limit)}. Raise the context length in Model settings, use a model with a larger context, or attach less.`,
     });
   }
 
@@ -217,7 +223,7 @@ router.post('/chat', async (req, res) => {
     try { await ollama.getVersion(); reachable = true; } catch { /* really down */ }
     if (reachable) {
       const n = clean.num_ctx;
-      const ctxNote = n ? ` (context length is ${n >= 1024 ? Math.round(n / 1024) + 'k' : n})` : '';
+      const ctxNote = n ? ` (context length is ${fmtCtx(n)})` : '';
       return res.status(502).json({
         error: `${model} failed to respond — the model likely ran out of memory or timed out loading${ctxNote}. ` +
           `Lower the context length in Model settings, or pick a smaller model.`,
