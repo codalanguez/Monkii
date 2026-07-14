@@ -229,7 +229,7 @@ The desktop shell adds its own hardening: sandboxed renderer with context isolat
 
 ## Roadmap
 
-Monkii's plans live in **[ROADMAP.md](ROADMAP.md)** — grouped by the promise each item serves: keeping it **local**, **secure**, and **yours**. The guiding rule for everything there: nothing ever *requires* an account, a cloud service, or sending your data off the machine — anything remote is opt-in, per chat, and labeled.
+Monkii's plans live in **[ROADMAP.md](ROADMAP.md)** — grouped by the promise each item serves: keeping it **local-first**, **honest**, and **yours**. The guiding rule for everything there: nothing ever *requires* an account, a cloud service, or sending your data off the machine — anything remote is opt-in, per chat, and labeled.
 
 A few of what's next: version-check-off by default, self-contained Ollama, theming, search across chats, and export/import. (Local retrieval over big attachments already shipped — see the [benchmarks](#benchmarks) above.) See the [full roadmap →](ROADMAP.md)
 

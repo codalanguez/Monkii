@@ -1,6 +1,6 @@
 # 🐒 Monkii — Roadmap
 
-The guiding rule for everything here: **it stays local.** Nothing on this list should ever require an account, a cloud service, or sending your data off the machine. Ideas are grouped by the promise they serve — keeping Monkii **local, secure, and yours**.
+The guiding rule for everything here: **local by default, honest always.** Nothing on this list may ever *require* an account, a cloud service, or sending your data off the machine — anything remote (like the optional OpenRouter backend) is opt-in, per chat, and clearly labeled. Ideas are grouped by the promise they serve — keeping Monkii **local-first, honest, and yours**.
 
 Have an idea? Open an issue — local-first, private-by-default proposals move to the top.
 
