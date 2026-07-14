@@ -8,11 +8,16 @@
  * stored locally as {id, name, contextLength} so the picker renders them
  * without needing the catalog fetched first.
  */
-import { $, esc, toast } from './util.js';
+import { $, esc, fmtCtx } from './util.js';
 import { api } from './api.js';
 import { state } from './state.js';
 import { initModal } from './modal.js';
 import { loadModels } from './status.js';
+
+/* Single source of truth for the remote-model namespace on the frontend
+ * (mirrors PREFIX in lib/openrouter.js — the chat.model values on disk). */
+export const OR_PREFIX = 'openrouter:';
+export const isRemoteModel = (name) => typeof name === 'string' && name.startsWith(OR_PREFIX);
 
 const FAV_KEY = 'monkii.orFavorites';
 
@@ -32,7 +37,6 @@ export async function refreshOrStatus() {
 /* ---- browse dialog ---- */
 
 const perM = (p) => (p == null || Number.isNaN(p)) ? '—' : `$${(p * 1e6).toFixed(2)}`;
-const fmtCtx = (n) => n ? (n >= 1024 ? `${Math.round(n / 1024)}k` : String(n)) : '—';
 
 function renderList() {
   const q = $('#or-search').value.trim().toLowerCase();
@@ -51,7 +55,7 @@ function renderList() {
         <div class="or-name">${esc(m.name)}</div>
         <div class="or-id">${esc(m.id)}</div>
       </div>
-      <div class="or-specs">${fmtCtx(m.contextLength)} ctx · ${perM(m.promptPrice)} in / ${perM(m.completionPrice)} out <span class="or-perm">per M tokens</span></div>
+      <div class="or-specs">${fmtCtx(m.contextLength, '—')} ctx · ${perM(m.promptPrice)} in / ${perM(m.completionPrice)} out <span class="or-perm">per M tokens</span></div>
     </li>`).join('')
     : '<li class="empty">No models match.</li>';
 
@@ -63,8 +67,13 @@ function toggleFav(id) {
   const i = favs.findIndex(f => f.id === id);
   if (i >= 0) favs.splice(i, 1);
   else {
-    const m = (state.orCatalog || []).find(x => x.id === id);
-    favs.push({ id, name: m ? m.name : id, contextLength: m ? m.contextLength : null });
+    const m = (state.orCatalog || []).find(x => x.id === id) || {};
+    // keep enough metadata (incl. prices) for the picker and info box to
+    // render without needing the catalog fetched first
+    favs.push({
+      id, name: m.name || id, contextLength: m.contextLength || null,
+      promptPrice: m.promptPrice ?? null, completionPrice: m.completionPrice ?? null,
+    });
   }
   saveFavorites(favs);
   renderList();

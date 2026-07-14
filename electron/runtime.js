@@ -8,6 +8,7 @@
  * runtime imports nothing.
  */
 const path = require('path');
+const { pathToFileURL } = require('url');
 
 const runtime = {
   APP_ROOT: path.join(__dirname, '..'),
@@ -23,11 +24,13 @@ const runtime = {
     return `http://127.0.0.1:${runtime.serverPort}/`;
   },
 
-  /** URLs the window itself is allowed to display: the app and its splash. */
+  /** URLs the window itself is allowed to display: the app and its splash.
+   * file:// is pinned to the bundled splash page specifically — a blanket
+   * file:// pass would let any local HTML file claim the preload bridge. */
   isAppUrl(url) {
     return url.startsWith(`http://127.0.0.1:${runtime.serverPort}/`)
       || url.startsWith(`http://localhost:${runtime.serverPort}/`)
-      || url.startsWith('file://');
+      || url === pathToFileURL(path.join(__dirname, 'loading.html')).href;
   },
 };
 

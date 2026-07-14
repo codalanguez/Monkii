@@ -16,21 +16,24 @@ import { skillNames, renderSkillChips } from './skills.js';
 import { showView } from './views.js';
 import { refreshContext, clearContext, willOverflow, cannotCompact } from './context-meter.js';
 import { updateRemoteBadge } from './status.js';
+import { isRemoteModel } from './openrouter.js';
 import { confirmDialog } from './confirm.js';
 import { openOverflowDialog } from './overflow.js';
 import { renderChatAttachments } from './attachments.js';
 
 const THINKING_DOTS = '<span class="thinking-dots"><i></i><i></i><i></i></span>';
 
-// A runner that crashes mid-generation surfaces as raw Ollama socket text
-// forwarded straight through the stream. Translate that to a plain-language
-// cause. (The server already rewrites load-time crashes, whose message no
+// A LOCAL runner that crashes mid-generation surfaces as raw Ollama socket
+// text forwarded straight through the stream. Translate that to a
+// plain-language cause — but only for local models: a remote provider's
+// "connection reset" is their outage, not your GPU, and the advice would be
+// wrong. (The server already rewrites load-time crashes, whose message no
 // longer contains these keywords, so this won't touch it.)
 // Keep this pattern identical to RUNNER_CRASH_RE in routes/ollama.js.
 const RUNNER_CRASH_RE = /wsarecv|forcibly closed|connection reset|econnreset|broken pipe|runner (process )?has terminated|llama runner|exit status|unexpected eof|out of memory|cudamalloc|cuda error|insufficient memory|failed to allocate/i;
-const humanizeError = (msg) => RUNNER_CRASH_RE.test(msg || '')
-  ? "The model's runner ran out of GPU memory and crashed. Lower the context length in Model settings, pick a smaller model, or close other GPU apps."
-  : msg;
+const humanizeError = (msg, model) => (isRemoteModel(model) || !RUNNER_CRASH_RE.test(msg || ''))
+  ? msg
+  : "The model's runner ran out of GPU memory and crashed. Lower the context length in Model settings, pick a smaller model, or close other GPU apps.";
 
 /** Toggle streaming state and the send/stop button pair together. */
 function setStreaming(on) {
@@ -158,7 +161,7 @@ export async function send(bypassOverflow = false) {
   const text = input.value.trim();
   if (!text || !state.project || !state.chatId) return;
   const model = $('#model-select').value;
-  if (!model) { toast('No model available — is Ollama running with a pulled model?', true); return; }
+  if (!model) { toast('No model available — pull one via Manage models, or add remote models in Preferences.', true); return; }
 
   // Overflow handling: if the request won't fit the context, either the server
   // can compact it (drop old history) or — if even the system prompt alone is
@@ -226,7 +229,7 @@ export async function send(bypassOverflow = false) {
     if (e.name === 'AbortError') {
       body.innerHTML = md(acc) + '<p><em>— stopped —</em></p>';
     } else {
-      body.innerHTML = `<p style="color:var(--blood)">⚠ ${esc(humanizeError(e.message))}</p>`;
+      body.innerHTML = `<p style="color:var(--blood)">⚠ ${esc(humanizeError(e.message, model))}</p>`;
     }
   }
   box.scrollTop = box.scrollHeight;

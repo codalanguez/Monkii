@@ -33,6 +33,12 @@ export function fmtBytes(n, empty = '') {
   return `${(n / 1e6).toFixed(0)} MB`;
 }
 
+/** Context length → "16k" / "900"; `empty` is returned for 0/undefined. */
+export function fmtCtx(n, empty = '') {
+  if (!n) return empty;
+  return n >= 1024 ? `${Math.round(n / 1024)}k` : String(n);
+}
+
 /** Async-iterate an NDJSON fetch Response, yielding each parsed object.
  *  Partial/invalid lines are skipped; the caller handles any {error} events. */
 export async function* readNdjson(res) {

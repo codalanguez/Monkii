@@ -122,7 +122,7 @@ router.get('/update-check', async (req, res) => res.json(await ollama.checkOllam
 router.get('/openrouter/status', (req, res) => res.json({ configured: openrouter.configured() }));
 
 /* The remote catalog (id, name, context length, $/token) for the browse
- * dialog. 502s with a clear message when unconfigured or unreachable. */
+ * dialog. 400 when no key is configured; 502 when OpenRouter is unreachable. */
 router.get('/openrouter/models', async (req, res) => {
   if (!openrouter.configured()) return res.status(400).json({ error: 'No OpenRouter API key configured — add one in Preferences.' });
   try { res.json({ models: await openrouter.listModels() }); }
@@ -165,9 +165,12 @@ router.post('/index-status', (req, res) => {
 
 /* The context limit a request will be compacted against. Local models use the
  * project's num_ctx; remote models have a fixed per-model context length from
- * the OpenRouter catalog (128k fallback while the catalog loads). */
+ * the OpenRouter catalog (128k fallback while the catalog loads). Without a
+ * key, no catalog fetch ever fires — a stale remote chat must not produce
+ * outbound traffic from a machine that is supposed to be fully local. */
 async function contextLimitFor(model, projectOptions) {
   if (openrouter.isRemote(model)) {
+    if (!openrouter.configured()) return 131072;
     if (!openrouter.contextLengthFor(model)) await openrouter.listModels().catch(() => {});
     return openrouter.contextLengthFor(model) || 131072;
   }
@@ -209,6 +212,14 @@ router.post('/chat', async (req, res) => {
   }
   if (!model) return res.status(400).json({ error: 'no model selected' });
   if (!message || !message.trim()) return res.status(400).json({ error: 'empty message' });
+  // A remote model without a key must never reach the network: the request
+  // would carry the full prompt with an empty Authorization header. Reject it
+  // before anything is persisted or sent.
+  if (openrouter.isRemote(model) && !openrouter.configured()) {
+    return res.status(400).json({
+      error: 'This chat uses a remote (OpenRouter) model but no API key is configured — add one in Preferences, or pick a local model.',
+    });
+  }
 
   chat.messages.push({ role: 'user', content: message, ts: Date.now(), skillIds });
   if (chat.title === 'New chat') chat.title = message.trim().slice(0, 60);

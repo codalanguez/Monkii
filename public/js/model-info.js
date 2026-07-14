@@ -6,14 +6,12 @@
  * derived from the model's size, name, and capabilities — including a heads-up
  * when a model is large enough to load slowly on a modest machine.
  */
-import { $, fmtBytes } from './util.js';
+import { $, fmtBytes, fmtCtx } from './util.js';
 import { api } from './api.js';
 import { state } from './state.js';
+import { orFavorites, isRemoteModel, OR_PREFIX } from './openrouter.js';
 
-function fmtCtx(n) {
-  if (!n) return '';
-  return n >= 1024 ? `${Math.round(n / 1024)}K context` : `${n} context`;
-}
+const fmtCtxLabel = (n) => n ? `${fmtCtx(n)} context` : '';
 
 /** Single source of truth for what a model is, from its name + capabilities. */
 function detectTraits(name, caps) {
@@ -64,14 +62,14 @@ function recommend(size, t) {
 /** Remote (OpenRouter) models: specs come from the catalog/favorites, and the
  * recommendation is honest about where the text goes. */
 function updateRemoteInfo(name) {
-  const id = name.slice('openrouter:'.length);
+  const id = name.slice(OR_PREFIX.length);
   const m = (state.orCatalog || []).find(x => x.id === id)
-    || (JSON.parse(localStorage.getItem('monkii.orFavorites') || '[]')).find(x => x.id === id)
+    || orFavorites().find(x => x.id === id)
     || { id };
   const perM = (p) => (p == null || Number.isNaN(p)) ? null : `$${(p * 1e6).toFixed(2)}`;
   $('#mi-name').textContent = m.name || id;
   $('#mi-specs').textContent = [
-    m.contextLength ? fmtCtx(m.contextLength) : '',
+    fmtCtxLabel(m.contextLength),
     perM(m.promptPrice) ? `${perM(m.promptPrice)} in / ${perM(m.completionPrice)} out per M tokens` : '',
   ].filter(Boolean).join(' · ') || 'remote model';
   const traits = detectTraits(id, []);
@@ -84,7 +82,7 @@ export async function updateModelInfo(name) {
   const box = $('#model-info');
   if (!name) { box.hidden = true; return; }
   box.hidden = false;
-  if (name.startsWith('openrouter:')) return updateRemoteInfo(name);
+  if (isRemoteModel(name)) return updateRemoteInfo(name);
   const size = (state.models.find(m => m.name === name) || {}).size || 0;
 
   $('#mi-name').textContent = name;
@@ -95,7 +93,7 @@ export async function updateModelInfo(name) {
   try {
     const info = await api(`/api/models/info?name=${encodeURIComponent(name)}`);
     caps = info.capabilities || [];
-    $('#mi-specs').textContent = [info.parameterSize, info.quantization, fmtBytes(size), fmtCtx(info.contextLength)]
+    $('#mi-specs').textContent = [info.parameterSize, info.quantization, fmtBytes(size), fmtCtxLabel(info.contextLength)]
       .filter(Boolean).join(' · ');
   } catch { /* Ollama offline — fall back to size + name heuristics */ }
   const traits = detectTraits(name, caps);

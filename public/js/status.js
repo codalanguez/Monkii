@@ -8,7 +8,7 @@
 import { $, esc } from './util.js';
 import { api } from './api.js';
 import { state } from './state.js';
-import { orFavorites } from './openrouter.js';
+import { orFavorites, isRemoteModel, OR_PREFIX } from './openrouter.js';
 
 export async function checkHealth() {
   const el = $('#ollama-status');
@@ -33,7 +33,7 @@ export async function checkHealth() {
 /** "☁ remote" chip beside the picker — visible when the selected model runs
  * off-machine, so it's always obvious where a chat's text goes. */
 export function updateRemoteBadge() {
-  $('#remote-badge').hidden = !($('#model-select').value || '').startsWith('openrouter:');
+  $('#remote-badge').hidden = !isRemoteModel($('#model-select').value);
 }
 
 export async function loadModels() {
@@ -53,7 +53,7 @@ export async function loadModels() {
       : '<option value="">Ollama offline</option>';
   } else {
     const localOpts = local.map(m => `<option value="${esc(m.name)}">${esc(m.name)}</option>`).join('');
-    const remoteOpts = favs.map(f => `<option value="openrouter:${esc(f.id)}">☁ ${esc(f.name || f.id)}</option>`).join('');
+    const remoteOpts = favs.map(f => `<option value="${OR_PREFIX}${esc(f.id)}">☁ ${esc(f.name || f.id)}</option>`).join('');
     sel.innerHTML =
       (local.length ? `<optgroup label="On this machine">${localOpts}</optgroup>` : '') +
       (favs.length ? `<optgroup label="OpenRouter — remote">${remoteOpts}</optgroup>` : '');
