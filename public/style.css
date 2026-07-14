@@ -22,10 +22,85 @@
   --line: rgba(255, 212, 0, .18);       /* gold hairlines */
   --line-soft: rgba(255, 212, 0, .09);
 
+  /* atmosphere glow colors (see body::before) */
+  --glow-a: rgba(255, 212, 0, .05);
+  --glow-b: rgba(229, 9, 20, .04);
+
   --font-display: 'Forum', Georgia, serif;
   --font-body: 'Inter', 'Segoe UI', sans-serif;
   --font-mono: 'Cascadia Mono', 'Consolas', 'SFMono-Regular', ui-monospace, 'Segoe UI Mono', monospace;
   --font-serif: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* ============ Theme presets ============
+   Pure token overrides — pick in Preferences → Theme; applied pre-paint by
+   js/theme-boot.js via <html data-theme="…">. Default (no attribute) is the
+   Cyber Deco palette above. */
+
+/* Speakeasy Noir — smoke-brown black, brass, oxblood, absinthe terminal */
+:root[data-theme="speakeasy"] {
+  --void: #0d0a07;
+  --onyx: #080604;
+  --obsidian: #151008;
+  --panel: #1d150c;
+  --gold: #d4a355;
+  --gold-bright: #ecc987;
+  --gold-deep: #a5813f;
+  --red: #8e2432;
+  --red-bright: #b03a49;
+  --red-deep: #471119;
+  --teal: #3a4a41;
+  --cyan: #a9d97c;
+  --bone: #efe4cd;
+  --bone-dim: #ab9d84;
+  --line: rgba(212, 163, 85, .22);
+  --line-soft: rgba(212, 163, 85, .10);
+  --glow-a: rgba(212, 163, 85, .06);
+  --glow-b: rgba(142, 36, 50, .05);
+}
+
+/* Gothic Library — oak-green dark, candle gold, deep red, verdigris */
+:root[data-theme="gothic"] {
+  --void: #090b08;
+  --onyx: #050705;
+  --obsidian: #10140e;
+  --panel: #171d14;
+  --gold: #e0b64f;
+  --gold-bright: #f2d485;
+  --gold-deep: #ab8b36;
+  --red: #7c1420;
+  --red-bright: #a12836;
+  --red-deep: #3d0a12;
+  --teal: #28443a;
+  --cyan: #7fd4a8;
+  --bone: #eee6cf;
+  --bone-dim: #a8a189;
+  --line: rgba(224, 182, 79, .20);
+  --line-soft: rgba(224, 182, 79, .09);
+  --glow-a: rgba(224, 182, 79, .05);
+  --glow-b: rgba(40, 68, 58, .10);
+}
+
+/* Midnight — cool blue-black, ice-blue primary, silver text */
+:root[data-theme="midnight"] {
+  --void: #07090d;
+  --onyx: #04060a;
+  --obsidian: #0c1017;
+  --panel: #131a24;
+  --gold: #7fb4ff;
+  --gold-bright: #aecfff;
+  --gold-deep: #6d93ce;
+  --red: #d94f5c;
+  --red-bright: #ef6b77;
+  --red-deep: #57121c;
+  --teal: #1d3a50;
+  --cyan: #66e0ff;
+  --bone: #e8edf6;
+  --bone-dim: #97a2b5;
+  --line: rgba(127, 180, 255, .20);
+  --line-soft: rgba(127, 180, 255, .09);
+  --glow-a: rgba(127, 180, 255, .05);
+  --glow-b: rgba(102, 224, 255, .03);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,8 +125,8 @@ body::before {
   content: '';
   position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(1100px 550px at 85% -10%, rgba(255, 212, 0, .05), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, rgba(229, 9, 20, .04), transparent 60%),
+    radial-gradient(1100px 550px at 85% -10%, var(--glow-a), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, var(--glow-b), transparent 60%),
     repeating-linear-gradient(0deg, rgba(0, 0, 0, .28) 0 1px, transparent 1px 3px);
 }
 /* traveling CRT scan band */
@@ -808,6 +883,21 @@ input, textarea, select { font-family: inherit; font-size: inherit; color: var(-
 }
 .prefs-key-input:focus { border-color: var(--gold-deep); }
 .prefs-key-input[disabled] { opacity: .4; }
+.prefs-theme-select {
+  font-family: var(--font-body); font-size: 13.5px; color: var(--bone);
+  padding: 7px 10px; border: 1px solid var(--line-soft); border-radius: 2px;
+  background: #030302; outline: none; cursor: pointer; min-width: 240px;
+}
+.prefs-theme-select:focus { border-color: var(--gold-deep); }
+
+/* retry (regenerate the last reply) */
+.msg-retry {
+  display: inline-block; margin-top: 8px;
+  background: none; border: 1px solid var(--line-soft); border-radius: 2px;
+  color: var(--bone-dim); font-family: var(--font-mono); font-size: 11px;
+  padding: 3px 10px; cursor: pointer; letter-spacing: .05em;
+}
+.msg-retry:hover { color: var(--gold); border-color: var(--gold-deep); }
 
 /* Reasoning ("thinking") blocks + remote usage/cost */
 .think {

@@ -177,6 +177,9 @@ export function renderMessages() {
         m.skillIds && m.skillIds.length ? `<div class="msg-skills">invoked: ${esc(skillNames(m.skillIds).join(', '))}</div>` : ''}</div>`
     : `<div class="msg msg-assistant"><div class="msg-role">${esc(m.model || 'Model')}</div><div class="msg-body">${thinkingHtml(m.thinking)}${md(m.content)}</div>${usageMeta(m.usage)}</div>`
   ).join('');
+  // retry lives on the conversation's final reply only
+  const last = chat.messages[chat.messages.length - 1];
+  if (last && last.role === 'assistant') addRetryButton(box.lastElementChild);
   box.scrollTop = box.scrollHeight;
   updateChatCost();
 }
@@ -209,6 +212,43 @@ export async function send(bypassOverflow = false) {
   input.value = '';
   input.style.height = 'auto';
 
+  await runExchange(text, skillIds, model);
+}
+
+/**
+ * Retry: re-run the last prompt. Pops the last exchange (trailing assistant
+ * replies + the user message) on the server and resends the same text with
+ * the same invoked skills — under whatever model is currently selected, so
+ * switching models and hitting retry compares takes.
+ */
+export async function retryLast() {
+  if (state.streaming || !state.project || !state.chatId) return;
+  const chat = currentChat();
+  if (!chat || !chat.messages.some(m => m.role === 'user')) return;
+  const model = $('#model-select').value;
+  if (!model) { toast('No model available — pull one via Manage models, or add remote models in Preferences.', true); return; }
+
+  let removed;
+  try {
+    removed = await api(`/api/projects/${state.project.id}/chats/${state.chatId}/messages/last`, { method: 'DELETE' });
+  } catch (e) { toast(e.message, true); return; }
+
+  // mirror the server: drop trailing assistant replies, then the user message
+  while (chat.messages.length && chat.messages[chat.messages.length - 1].role !== 'user') chat.messages.pop();
+  chat.messages.pop();
+  renderMessages();
+  await runExchange(removed.message, removed.skillIds || [], model);
+}
+
+const RETRY_BTN = '<button class="msg-retry" title="Retry — re-run your last prompt (with the currently selected model)">↻ retry</button>';
+
+function addRetryButton(el) {
+  el.insertAdjacentHTML('beforeend', RETRY_BTN);
+  el.querySelector('.msg-retry').addEventListener('click', retryLast);
+}
+
+/** One full exchange: push the user turn, stream the reply, persist locally. */
+async function runExchange(text, skillIds, model) {
   const chat = currentChat();
   chat.messages.push({ role: 'user', content: text, skillIds });
   if (chat.title === 'New chat') { chat.title = text.slice(0, 60); $('#chat-title').textContent = chat.title; renderChatList(); }
@@ -271,6 +311,7 @@ export async function send(bypassOverflow = false) {
   if (usage) doneMsg.usage = usage;
   chat.messages.push(doneMsg);
   chat.model = model;
+  addRetryButton(bubble); // works after errors and Stop too — that's when you want it most
   updateChatCost();
   refreshContext(); // history grew — re-estimate the base
 }

@@ -7,6 +7,7 @@
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="style.css">
+<script src="js/theme-boot.js"></script>
 </head>
 <body>
 <div id="app">
@@ -310,6 +311,19 @@
       </header>
       <div class="prefs-body">
         <div class="field">
+          <span>Theme <em>the palette Monkii wears</em></span>
+          <div class="prefs-actions">
+            <select id="prefs-theme" class="prefs-theme-select" title="Theme">
+              <option value="cyber-deco">Cyber Deco (default)</option>
+              <option value="speakeasy">Speakeasy Noir</option>
+              <option value="gothic">Gothic Library</option>
+              <option value="midnight">Midnight</option>
+            </select>
+          </div>
+          <div class="prefs-note">Applies instantly and sticks — no restart. More theming (custom colors, fonts, light mode) is on the roadmap.</div>
+        </div>
+
+        <div class="field prefs-desktop">
           <span>Ollama models folder <em>where pulled models are stored on disk</em></span>
           <div id="prefs-models-dir" class="prefs-path"></div>
           <div class="prefs-actions">
@@ -322,7 +336,7 @@
           <div class="prefs-note">Takes effect the next time Monkii starts Ollama (quit Ollama, then relaunch the app).</div>
         </div>
 
-        <div class="field">
+        <div class="field prefs-desktop">
           <span>Projects &amp; chats folder <em>where conversations and project settings are saved</em></span>
           <div id="prefs-data-dir" class="prefs-path"></div>
           <div class="prefs-actions">
@@ -335,7 +349,7 @@
           <div class="prefs-note">Changing this restarts the app view. Existing chats stay in the old folder — move the JSON files over if you want them in the new one.</div>
         </div>
 
-        <div class="field">
+        <div class="field prefs-desktop">
           <span>Skills folder <em>where SKILL.md folders are scanned from</em></span>
           <div id="prefs-skills-dir" class="prefs-path"></div>
           <div class="prefs-actions">
@@ -348,7 +362,7 @@
           <div class="prefs-note">Point this at an existing library (e.g. <b>~\.claude\skills</b>) to use your Claude Code skills as-is.</div>
         </div>
 
-        <div class="field">
+        <div class="field prefs-desktop">
           <span>File access <em>which folders the browser and attachments can read</em></span>
           <div id="prefs-fs-summary" class="prefs-path"></div>
           <ul id="prefs-fs-list" class="prefs-fs-list"></ul>
@@ -363,7 +377,7 @@
           <div class="prefs-note">By default Monkii can only read inside your home folder (this includes <b>AppData</b> and dotfiles like <b>.ssh</b> — narrow it to a specific folder if that matters to you). Add a folder to allow attachments from elsewhere (e.g. a projects drive), or allow the whole disk. Changing this restarts the app view.</div>
         </div>
 
-        <div class="field">
+        <div class="field prefs-desktop">
           <span>Remote models — OpenRouter <em>optional; off unless you add a key</em></span>
           <div id="prefs-or-status" class="prefs-path"></div>
           <div class="prefs-actions">
@@ -384,7 +398,7 @@
           <div class="prefs-note"><b>This changes where your words go.</b> Chats that use an OpenRouter model send that chat's messages, project instructions, and attachments to openrouter.ai and the model's provider — they leave this machine. Local models are never affected, and nothing goes remote unless you pick a remote model for a chat. The key is stored OS-encrypted and never shown again. Saving restarts the app view.</div>
         </div>
 
-        <div class="field">
+        <div class="field prefs-desktop">
           <span>Update check <em>look for newer Ollama releases</em></span>
           <label class="prefs-toggle">
             <input type="checkbox" id="prefs-update-check">

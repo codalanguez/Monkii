@@ -114,6 +114,22 @@ router.put('/projects/:pid/chats/:cid', (req, res) => {
   } catch { res.status(404).json({ error: 'project not found' }); }
 });
 
+/* Pop the last exchange (any trailing assistant replies plus the user message
+ * before them) so it can be re-run — the "retry" command. Returns the removed
+ * user message so the client can resend it verbatim. */
+router.delete('/projects/:pid/chats/:cid/messages/last', (req, res) => {
+  try {
+    const p = loadProject(req.params.pid);
+    const c = p.chats.find(c => c.id === req.params.cid);
+    if (!c) return res.status(404).json({ error: 'chat not found' });
+    if (!c.messages.some(m => m.role === 'user')) return res.status(400).json({ error: 'nothing to retry' });
+    while (c.messages.length && c.messages[c.messages.length - 1].role !== 'user') c.messages.pop();
+    const user = c.messages.pop();
+    saveProject(p);
+    res.json({ message: user.content, skillIds: user.skillIds || [] });
+  } catch { res.status(404).json({ error: 'project not found' }); }
+});
+
 /* Clear a chat's messages — keeps the chat, its model, and attachments, but
  * wipes the conversation (and so the context it was building up). */
 router.delete('/projects/:pid/chats/:cid/messages', (req, res) => {

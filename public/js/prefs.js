@@ -112,15 +112,36 @@ function wireAction(btnId, call, msg) {
   });
 }
 
-export function initPrefs() {
-  if (!bridge) return; // browser mode — no desktop shell to configure
+/* ---- theme (works in desktop AND browser mode — purely client-side) ---- */
 
+const THEME_KEY = 'monkii.theme'; // keep in sync with js/theme-boot.js
+const savedTheme = () => { try { return localStorage.getItem(THEME_KEY) || 'cyber-deco'; } catch { return 'cyber-deco'; } };
+
+function applyTheme(t) {
+  if (t && t !== 'cyber-deco') document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+  try { localStorage.setItem(THEME_KEY, t); } catch { /* storage disabled */ }
+}
+
+export function initPrefs() {
   const modal = initModal('#prefs-backdrop', '#btn-close-prefs');
   $('#btn-prefs').hidden = false;
+
+  const themeSel = $('#prefs-theme');
+  themeSel.value = savedTheme();
+  themeSel.addEventListener('change', () => applyTheme(themeSel.value));
+
   $('#btn-prefs').addEventListener('click', async () => {
-    render(await bridge.getPrefs());
+    themeSel.value = savedTheme();
+    if (bridge) render(await bridge.getPrefs());
     modal.open();
   });
+
+  if (!bridge) {
+    // browser mode: no desktop shell to configure — only the theme applies
+    document.querySelectorAll('#prefs-backdrop .prefs-desktop').forEach(el => { el.hidden = true; });
+    return;
+  }
 
   wireAction('#btn-prefs-choose-dir', () => bridge.chooseModelsDir(),
     'Models folder saved — applies next time Monkii starts Ollama');

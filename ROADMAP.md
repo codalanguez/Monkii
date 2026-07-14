@@ -9,9 +9,9 @@ Have an idea? Open an issue — local-first, private-by-default proposals move t
 The current focus, in priority order (details in the sections below). With the local/secure foundation in place, this round is about making Monkii a great daily tool:
 
 1. **Search across chats & projects** — the lists are flat and unsearchable; find any past conversation or project
-2. **Edit · regenerate · branch messages** — fix a prompt and re-run, branch an alternate take, copy a conversation as Markdown
+2. **Edit · regenerate · branch messages** — fix a prompt and re-run, branch an alternate take, copy a conversation as Markdown *(first slice shipped: ↻ retry on the last reply — re-runs your last prompt, including under a different model)*
 3. **Backup & wipe controls** — one-click backup (zip the data dir), a real "erase everything" (including embeddings), and a data-location shortcut
-4. **Theming** — palette presets, light/dark/system, font & density controls (the UI already runs on CSS variables)
+4. **Theming** — palette presets, light/dark/system, font & density controls (the UI already runs on CSS variables) *(first slice shipped: four presets — Cyber Deco, Speakeasy Noir, Gothic Library, Midnight — in Preferences → Theme, applied pre-paint, persisted)*
 5. **Completion notifications** — a desktop toast (optional sound) when a long generation finishes while Monkii is in the background
 
 *(The CA-signed certificate is deliberately deferred for now.)*
