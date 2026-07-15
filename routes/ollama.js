@@ -139,7 +139,12 @@ router.get('/openrouter/key-status', async (req, res) => {
   try { res.json(await openrouter.keyInfo()); }
   catch (e) {
     logError('openrouter key-status', e);
-    res.status(502).json({ error: 'Could not check the key — is the internet reachable?' });
+    const rejected = /\(40[13]\)/.test(String(e.message));
+    res.status(502).json({
+      error: rejected
+        ? 'OpenRouter rejected the API key — check it in Preferences.'
+        : 'Could not check the key — is the internet reachable?',
+    });
   }
 });
 

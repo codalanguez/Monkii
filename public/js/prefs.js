@@ -63,7 +63,7 @@ function renderOpenRouter(prefs) {
   $('#prefs-or-logging').disabled = Boolean(prefs.orDataCollectionEnv);
   $('#prefs-or-logging-env-note').hidden = !prefs.orDataCollectionEnv;
 
-  // live spend on the key, filled in once the (async) check returns. The
+  // live budget + spend, filled in once the (async) check returns. The
   // generation counter keeps a slow response from a previous open from
   // appending to (or duplicating on) a newer render.
   if (prefs.openrouterConfigured) {
@@ -71,10 +71,12 @@ function renderOpenRouter(prefs) {
     const gen = ++keyStatusGen;
     api('/api/openrouter/key-status').then(k => {
       if (gen !== keyStatusGen) return; // a newer render superseded this fetch
-      const spent = k.usage != null ? `$${k.usage.toFixed(2)} used` : '';
-      const cap = k.limit != null ? ` of $${k.limit.toFixed(2)}` : '';
-      const tier = k.isFreeTier ? ' (free tier)' : '';
-      if (spent) $('#prefs-or-status').textContent = `${base} · ${spent}${cap}${tier}`;
+      const parts = [];
+      // the account balance is the number that matters — lead with it
+      if (k.credits) parts.push(`$${k.credits.remaining.toFixed(2)} remaining of $${k.credits.totalCredits.toFixed(2)} loaded`);
+      if (k.usage != null) parts.push(`$${k.usage.toFixed(2)} used by this key${k.limit != null ? ` (cap $${k.limit.toFixed(2)})` : ''}`);
+      if (k.isFreeTier) parts.push('free tier');
+      if (parts.length) $('#prefs-or-status').textContent = `${base} · ${parts.join(' · ')}`;
     }).catch(() => { /* offline — the static line stands */ });
   }
 }

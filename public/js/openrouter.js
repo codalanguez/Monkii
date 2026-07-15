@@ -90,6 +90,17 @@ async function loadCatalog() {
     catch (e) { list.innerHTML = `<li class="empty">${esc(e.message)}</li>`; return; }
   }
   renderList();
+  showBalance();
+}
+
+/** Remaining account budget in the dialog hint — you're about to spend it. */
+async function showBalance() {
+  try {
+    const k = await api('/api/openrouter/key-status'); // server caches 60s
+    if (k.credits) {
+      $('#or-balance').textContent = `· $${k.credits.remaining.toFixed(2)} remaining on your account`;
+    }
+  } catch { /* offline — hint stays plain */ }
 }
 
 export function initOpenRouter() {
