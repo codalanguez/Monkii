@@ -314,3 +314,8 @@ electron/               desktop shell, one module per concern
 ```
 
 Each module carries a header comment explaining its responsibility.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Fork it, skin it, teach it new tricks; just keep the copyright notice attached.
+

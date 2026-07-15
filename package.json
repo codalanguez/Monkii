@@ -2,6 +2,8 @@
   "name": "monkii",
   "version": "1.6.2",
   "description": "Monkii — local LLM studio for Ollama: projects, Claude-style skills, and live file knowledge",
+  "license": "MIT",
+  "author": "Coda Languez",
   "main": "electron/main.js",
   "scripts": {
     "start": "node server.js",
