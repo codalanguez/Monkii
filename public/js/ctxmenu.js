@@ -12,9 +12,10 @@
  * editing menu (provided by the desktop shell) can appear.
  */
 import { $, copyText, toast } from './util.js';
-import { openChat, renameChat, deleteChat, clearChat } from './chat.js';
+import { openChat, renameChat, deleteChat, clearChat, currentChat } from './chat.js';
 import { openProject, deleteProjectById } from './projects.js';
 import { openSkillDetail } from './skills.js';
+import { saveAsFile } from './savefile.js';
 
 let menu = null;
 
@@ -72,9 +73,15 @@ function menuFor(target) {
   if (msg) {
     const selection = String(getSelection() || '').trim();
     const body = msg.querySelector('.msg-body');
+    // the real markdown source, keyed by render position — falls back to the
+    // rendered text for a message not yet indexed (e.g. still streaming).
+    // Matters because rendered headings are CSS-uppercased and markdown
+    // syntax (**bold**, code fences, links) doesn't survive an innerText read.
+    const raw = currentChat()?.messages[Number(msg.dataset.idx)]?.content ?? body.innerText.trim();
     return [
       selection && { label: 'Copy selection', action: () => { copyText(selection); toast('Copied'); } },
       { label: 'Copy message', action: () => { copyText(body.innerText.trim()); toast('Message copied'); } },
+      { label: 'Save as file…', action: () => saveAsFile(raw) },
     ];
   }
 

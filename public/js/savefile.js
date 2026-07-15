@@ -1,0 +1,92 @@
+/**
+ * savefile.js — "Save as file…": write chat content to disk.
+ *
+ * Reuses the file browser in folder-picking mode (dirsOnly — only folders are
+ * pickable) to choose a destination, then a small in-app filename dialog
+ * (never window.prompt(): the native dialog drops Electron's keyboard focus,
+ * same reason the app has its own confirm dialog) before writing through
+ * /api/fs/write. An existing file is never silently overwritten — the write
+ * 409s and the user is asked to confirm before it's retried with overwrite.
+ */
+import { $, toast } from './util.js';
+import { api } from './api.js';
+import { openBrowser } from './attachments.js';
+import { confirmDialog } from './confirm.js';
+
+let resolveName = null;
+
+function closeNameDialog(name) {
+  $('#savefile-backdrop').hidden = true;
+  const r = resolveName;
+  resolveName = null;
+  if (r) r(name);
+}
+
+/** Prompt for a filename inside `dir`; resolves the trimmed name, or null if canceled. */
+function askFilename(dir, suggested) {
+  return new Promise((resolve) => {
+    if (resolveName) closeNameDialog(null); // clear any pending dialog first
+    resolveName = resolve;
+    $('#savefile-dir').textContent = dir;
+    const input = $('#savefile-name');
+    input.value = suggested;
+    $('#savefile-backdrop').hidden = false;
+    input.focus();
+    // select the basename only (not the extension), like a native save dialog
+    const dot = suggested.lastIndexOf('.');
+    input.setSelectionRange(0, dot > 0 ? dot : suggested.length);
+  });
+}
+
+/** First non-blank line, slugged into a filename: "# Chapter One" → chapter-one.md */
+function suggestName(content) {
+  const first = content.split('\n').find(l => l.trim()) || 'message';
+  const slug = first.replace(/^#+\s*/, '').trim().slice(0, 50)
+    .replace(/[\\/:*?"<>|\x00-\x1f]/g, ' ').replace(/\s+/g, '-').replace(/^-+|-+$/g, '');
+  return `${slug || 'message'}.md`;
+}
+
+async function writeFile(dir, filename, content, overwrite) {
+  try {
+    const res = await api('/api/fs/write', { method: 'POST', body: { dir, filename, content, overwrite } });
+    toast(`Saved: ${res.path}`);
+    return true;
+  } catch (e) {
+    if (e.exists) {
+      const replace = await confirmDialog(`"${filename}" already exists in this folder. Replace it?`,
+        { confirmLabel: 'Replace', danger: true });
+      return replace ? writeFile(dir, filename, content, true) : false;
+    }
+    toast(e.message, true);
+    return false;
+  }
+}
+
+/** Entry point: save `content` (e.g. a chat message) to a file the user picks. */
+export function saveAsFile(content) {
+  if (!content || !content.trim()) { toast('Nothing to save', true); return; }
+  openBrowser({
+    title: 'Save file to…',
+    dirLabel: 'Save in this folder',
+    dirsOnly: true,
+    onPick: async (dir) => {
+      const filename = await askFilename(dir, suggestName(content));
+      if (filename) await writeFile(dir, filename, content, false);
+    },
+  });
+}
+
+export function initSaveFile() {
+  $('#btn-savefile-cancel').addEventListener('click', () => closeNameDialog(null));
+  $('#btn-close-savefile').addEventListener('click', () => closeNameDialog(null));
+  $('#savefile-backdrop').addEventListener('click', (e) => { if (e.target.id === 'savefile-backdrop') closeNameDialog(null); });
+  $('#btn-savefile-save').addEventListener('click', () => {
+    const name = $('#savefile-name').value.trim();
+    if (!name) { toast('Enter a file name', true); return; }
+    closeNameDialog(name);
+  });
+  $('#savefile-name').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); $('#btn-savefile-save').click(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeNameDialog(null); }
+  });
+}

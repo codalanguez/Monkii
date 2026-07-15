@@ -1,19 +1,40 @@
 /**
- * routes/fs.js — filesystem browsing for the attach dialog.
+ * routes/fs.js — filesystem browsing, preview, and write-to-disk.
  *
  * Powers the in-app file browser: lists a directory's entries (directories
  * first), exposes a "__drives__" pseudo-directory that enumerates drive
  * letters — or, when MONKII_FS_ROOTS is set, the allowed roots instead —
- * and refuses to look outside the allowlist.
+ * and refuses to look outside the allowlist. Also serves a read-only preview
+ * of a single file (GET /fs/read) and lets the UI save chat content to disk
+ * (POST /fs/write), both fenced by the same allowlist as browsing.
  */
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const express = require('express');
-const { FS_ROOTS } = require('../lib/config');
+const { FS_ROOTS, PREVIEW_MAX_BYTES, WRITE_MAX_BYTES } = require('../lib/config');
 const { pathAllowed } = require('../lib/security');
 
 const router = express.Router();
+
+/* A lone path segment: no separators, no drive/traversal tricks, none of the
+ * characters Windows itself rejects in a filename. Guarantees path.join(dir,
+ * filename) can't leave `dir` no matter what dir resolves to. */
+const SAFE_FILENAME = /^(?!\.{1,2}$)[^\\/:*?"<>|\x00-\x1f]{1,255}$/;
+
+/* Sniff the first chunk of a buffer for binary content: a NUL byte, or a
+ * heavy share of non-printable bytes, means "don't try to render this as
+ * text." Cheap and good enough — this gates a preview, not a security check. */
+function looksBinary(buf) {
+  const n = Math.min(buf.length, 8000);
+  let suspect = 0;
+  for (let i = 0; i < n; i++) {
+    const b = buf[i];
+    if (b === 0) return true;
+    if (b < 9 || (b > 13 && b < 32)) suspect++;
+  }
+  return n > 0 && suspect / n > 0.1;
+}
 
 function listDrives() {
   const drives = [];
@@ -42,6 +63,77 @@ router.get('/fs', (req, res) => {
   } catch (e) {
     res.status(400).json({ error: String(e.message || e) });
   }
+});
+
+/* Read-only preview of one file: bounded read, binary sniffed and refused
+ * (never sent to the client), oversized files truncated rather than fully
+ * loaded into memory. */
+router.get('/fs/read', (req, res) => {
+  const target = typeof req.query.path === 'string' ? req.query.path : '';
+  if (!target) return res.status(400).json({ error: 'path required' });
+  if (!pathAllowed(target)) return res.status(403).json({ error: 'path outside MONKII_FS_ROOTS' });
+  let stat;
+  try { stat = fs.statSync(target); }
+  catch { return res.status(404).json({ error: 'file not found' }); }
+  if (!stat.isFile()) return res.status(400).json({ error: 'not a file' });
+
+  const ext = path.extname(target).toLowerCase();
+  const readLen = Math.min(stat.size, PREVIEW_MAX_BYTES);
+  let buf;
+  try {
+    const fd = fs.openSync(target, 'r');
+    buf = Buffer.alloc(readLen);
+    fs.readSync(fd, buf, 0, readLen, 0);
+    fs.closeSync(fd);
+  } catch (e) { return res.status(400).json({ error: String(e.message || e) }); }
+
+  if (looksBinary(buf)) {
+    return res.json({ path: target, ext, size: stat.size, isBinary: true });
+  }
+  // Node doesn't strip a leading UTF-8 BOM on decode — plenty of real files
+  // (anything Notepad or PowerShell wrote) carry one, and it silently breaks
+  // markdown heading detection (the '#' isn't the first character anymore).
+  let content = buf.toString('utf8');
+  if (content.charCodeAt(0) === 0xFEFF) content = content.slice(1);
+  res.json({
+    path: target, ext, size: stat.size, content,
+    truncated: stat.size > readLen,
+  });
+});
+
+/* Write chat content to disk — "Save as file…". Takes a pre-validated
+ * directory plus a single-segment filename (never a combined path: that's
+ * what makes the filename regex an airtight traversal guard) and refuses to
+ * silently clobber an existing file. */
+router.post('/fs/write', (req, res) => {
+  const dir = typeof req.body.dir === 'string' ? req.body.dir : '';
+  const filename = typeof req.body.filename === 'string' ? req.body.filename.trim() : '';
+  const content = typeof req.body.content === 'string' ? req.body.content : '';
+  const overwrite = Boolean(req.body.overwrite);
+
+  if (!dir || !filename) return res.status(400).json({ error: 'dir and filename required' });
+  if (!SAFE_FILENAME.test(filename)) return res.status(400).json({ error: 'invalid filename' });
+  if (!pathAllowed(dir)) return res.status(403).json({ error: 'path outside MONKII_FS_ROOTS' });
+  let dirStat;
+  try { dirStat = fs.statSync(dir); }
+  catch { return res.status(404).json({ error: 'folder not found' }); }
+  if (!dirStat.isDirectory()) return res.status(400).json({ error: 'not a folder' });
+
+  const bytes = Buffer.byteLength(content, 'utf8');
+  if (bytes > WRITE_MAX_BYTES) {
+    return res.status(413).json({ error: `That's ${(bytes / 1024 / 1024).toFixed(1)} MB — files saved from Monkii are capped at ${(WRITE_MAX_BYTES / 1024 / 1024).toFixed(0)} MB.` });
+  }
+
+  const target = path.join(dir, filename);
+  if (!pathAllowed(target)) return res.status(403).json({ error: 'path outside MONKII_FS_ROOTS' }); // defense in depth
+  let exists = false;
+  try { exists = fs.statSync(target).isDirectory() ? 'dir' : true; } catch { /* doesn't exist — the common case */ }
+  if (exists === 'dir') return res.status(400).json({ error: 'a folder with that name already exists there' });
+  if (exists && !overwrite) return res.status(409).json({ error: 'A file with that name already exists.', exists: true });
+
+  try { fs.writeFileSync(target, content, 'utf8'); }
+  catch (e) { return res.status(400).json({ error: String(e.message || e) }); }
+  res.json({ path: target, size: bytes });
 });
 
 module.exports = router;

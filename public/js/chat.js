@@ -178,10 +178,13 @@ export function openChat(cid) {
 export function renderMessages() {
   const chat = currentChat();
   const box = $('#messages');
-  box.innerHTML = chat.messages.map(m => m.role === 'user'
-    ? `<div class="msg msg-user"><div class="msg-role">You</div><div class="msg-body">${esc(m.content)}</div>${
+  // data-idx maps a rendered bubble back to its raw message content — the
+  // context menu's "Save as file…" needs the real markdown source, not the
+  // rendered/uppercased-headings text a DOM read would give it.
+  box.innerHTML = chat.messages.map((m, i) => m.role === 'user'
+    ? `<div class="msg msg-user" data-idx="${i}"><div class="msg-role">You</div><div class="msg-body">${esc(m.content)}</div>${
         m.skillIds && m.skillIds.length ? `<div class="msg-skills">invoked: ${esc(skillNames(m.skillIds).join(', '))}</div>` : ''}</div>`
-    : `<div class="msg msg-assistant"><div class="msg-role">${esc(m.model || 'Model')}</div><div class="msg-body">${thinkingHtml(m.thinking)}${md(m.content)}</div>${usageMeta(m.usage)}</div>`
+    : `<div class="msg msg-assistant" data-idx="${i}"><div class="msg-role">${esc(m.model || 'Model')}</div><div class="msg-body">${thinkingHtml(m.thinking)}${md(m.content)}</div>${usageMeta(m.usage)}</div>`
   ).join('');
   // retry lives on the conversation's final reply only
   const last = chat.messages[chat.messages.length - 1];

@@ -9,6 +9,7 @@ import { $, esc, toast } from './util.js';
 import { api } from './api.js';
 import { state } from './state.js';
 import { refreshContext } from './context-meter.js';
+import { openPreview } from './filepreview.js';
 
 /* Live background-index progress per attachment path, for the "indexing %"
  * badge. A big attachment starts embedding on attach; we poll until it's ready. */
@@ -139,10 +140,12 @@ export function attachToChat() {
 
 let pick = attachPath;
 let pickVerb = 'attach';
+let dirsOnly = false; // e.g. "Save as file…" picks a folder, never a file
 
 export async function openBrowser(opts = {}) {
   pick = opts.onPick || attachPath;
   pickVerb = opts.verb || 'attach';
+  dirsOnly = Boolean(opts.dirsOnly);
   $('#file-browser h3').textContent = opts.title || 'Attach from this machine';
   $('#btn-attach-dir').textContent = opts.dirLabel || 'Attach this folder';
   $('#modal-backdrop').hidden = false;
@@ -164,12 +167,14 @@ export async function browseTo(dir) {
       ? `<li data-dir="${esc(data.parent)}"><span class="fb-icon">↰</span><span>..</span></li>` : '';
     $('#fb-entries').innerHTML = up + data.entries.map(e => e.isDir
       ? `<li data-dir="${esc(e.path)}"><span class="fb-icon">▣</span><span>${esc(e.name)}</span><button class="fb-attach" data-attach="${esc(e.path)}">${esc(pickVerb)}</button></li>`
-      : `<li class="fb-file" data-file="${esc(e.path)}"><span class="fb-icon">▤</span><span>${esc(e.name)}</span><button class="fb-attach" data-attach="${esc(e.path)}">${esc(pickVerb)}</button></li>`
+      : `<li class="fb-file" data-file="${esc(e.path)}" title="Click to preview"><span class="fb-icon">▤</span><span>${esc(e.name)}</span>${
+          dirsOnly ? '' : `<button class="fb-attach" data-attach="${esc(e.path)}">${esc(pickVerb)}</button>`}</li>`
     ).join('');
     $('#fb-entries').querySelectorAll('li[data-dir]').forEach(li =>
       li.addEventListener('click', (e) => { if (!e.target.dataset.attach) browseTo(li.dataset.dir); }));
+    // clicking a file previews it; the button (when shown) is what picks/attaches
     $('#fb-entries').querySelectorAll('li[data-file]').forEach(li =>
-      li.addEventListener('click', (e) => { if (!e.target.dataset.attach) { pick(li.dataset.file); closeBrowser(); } }));
+      li.addEventListener('click', (e) => { if (!e.target.dataset.attach) openPreview(li.dataset.file); }));
     $('#fb-entries').querySelectorAll('[data-attach]').forEach(b =>
       b.addEventListener('click', () => { pick(b.dataset.attach); closeBrowser(); }));
   } catch (e) { toast(e.message, true); }

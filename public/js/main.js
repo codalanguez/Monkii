@@ -25,6 +25,8 @@ import { updateMeter } from './context-meter.js';
 import { checkModels } from './model-bootstrap.js';
 import { initHelpAbout } from './about.js';
 import { initConfirm } from './confirm.js';
+import { initFilePreview } from './filepreview.js';
+import { initSaveFile } from './savefile.js';
 
 function wireNavigation() {
   $('#btn-new-project').addEventListener('click', createProject);
@@ -93,6 +95,8 @@ function wireFileBrowser() {
   $('#btn-fb-drives').addEventListener('click', () => browseTo('__drives__'));
   $('#btn-attach-dir').addEventListener('click', pickCurrentDir);
   $('#modal-backdrop').addEventListener('click', (e) => { if (e.target.id === 'modal-backdrop') closeBrowser(); });
+  initFilePreview(); // file rows in the browser preview on click
+  initSaveFile();
 }
 
 function wireComposer() {

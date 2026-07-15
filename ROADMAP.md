@@ -60,6 +60,7 @@ Folding in the parts of OpenRouter's API that serve Monkii's promises — privac
 - [x] **↻ Retry** — re-run the last prompt from a button on the conversation's final reply; works after errors and Stop, and respects a model switch so you can compare takes across models (first slice of edit·regenerate·branch)
 - [x] **Seven theme presets** — dark: Cyber Deco, Speakeasy Noir, Gothic Library, Midnight; light: Parchment, Daylight, Porcelain. Applied pre-paint (no flash), persisted, WCAG-AA contrast-checked, and the entire chrome (glows, scrollbars, chips, scrims) derives from theme tokens via `color-mix` — no hardcoded accent survives a theme switch (first slice of theming)
 - [x] **Adapter test suite** — `npm test` covers the OpenRouter boundary: privacy routing present, option remapping, routing-variant suffixes, cache markers, SSE→NDJSON translation, and hard numeric coercion of provider-supplied usage data
+- [x] **Preview & save files** — click a file in the browser to preview it (markdown rendered, binary refused, size-capped); right-click any message → **Save as file…** writes the real markdown source to disk (not a flattened copy — headings/code/links survive) via a folder-pick + in-app filename dialog, never silently overwriting. Fenced by the same `MONKII_FS_ROOTS` allowlist as everything else
 
 ## More local
 

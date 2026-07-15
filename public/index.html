@@ -157,6 +157,42 @@
     </div>
   </div>
 
+  <!-- ===== file preview modal (read-only) ===== -->
+  <div id="preview-backdrop" class="modal-backdrop" hidden>
+    <div id="preview-panel" class="modal-panel">
+      <header>
+        <div class="preview-head-text">
+          <h3 id="preview-title">Preview</h3>
+          <div id="preview-path" class="preview-path-line"></div>
+        </div>
+        <button id="btn-preview-copy-path" class="icon-btn" title="Copy full path">⧉</button>
+        <button id="btn-close-preview" class="icon-btn" title="Close">×</button>
+      </header>
+      <div id="preview-body" class="preview-body"></div>
+    </div>
+  </div>
+
+  <!-- ===== save-as-file: filename dialog (folder is chosen via the file browser first) ===== -->
+  <div id="savefile-backdrop" class="modal-backdrop" hidden>
+    <div id="savefile-panel" class="modal-panel small-panel">
+      <header>
+        <h3>Save as file</h3>
+        <button id="btn-close-savefile" class="icon-btn" title="Close">×</button>
+      </header>
+      <div class="savefile-body">
+        <div id="savefile-dir" class="prefs-path"></div>
+        <label class="field">
+          <span>File name</span>
+          <input id="savefile-name" type="text" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="prefs-actions">
+          <button id="btn-savefile-cancel" class="btn btn-ghost">Cancel</button>
+          <button id="btn-savefile-save" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== skills modal ===== -->
   <div id="skills-backdrop" class="modal-backdrop" hidden>
     <div id="skills-panel" class="modal-panel">
