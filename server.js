@@ -10,7 +10,7 @@
  *   lib/security.js     host/origin/CSP + fs allowlist   routes/skills.js    skill listing
  *   lib/store.js        project JSON persistence  routes/fs.js        file-browser listings
  *   lib/skills.js       SKILL.md parsing          routes/ollama.js    health/models/update/chat stream
- *   lib/attachments.js  reading knowledge from disk
+ *   lib/attachments.js  reading knowledge from disk   routes/search.js    search across projects/chats/messages
  *   lib/prompt.js       system prompt assembly
  *   lib/ollama.js       Ollama HTTP client + update check
  */
@@ -35,6 +35,7 @@ app.use(express.static(path.join(ROOT, 'public')));
 app.use('/api', require('./routes/projects'));
 app.use('/api', require('./routes/skills'));
 app.use('/api', require('./routes/fs'));
+app.use('/api', require('./routes/search'));
 app.use('/api', require('./routes/ollama'));
 
 /* JSON error handler — no stack traces to the client, but log the real one */

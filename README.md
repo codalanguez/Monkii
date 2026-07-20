@@ -98,6 +98,9 @@ Each project bundles:
 
 Everything is stored as plain JSON under `data/projects/` — easy to back up, easy to inspect, never leaves your disk.
 
+### Search
+**⌕ Search** in the rail (or **Ctrl+K**) searches project names, chat titles, and every message's content at once — a debounced query against a local endpoint, no index to maintain. Results are grouped by what matched, with a match-centered snippet for message hits; clicking one opens the right project and chat and scrolls straight to (and briefly highlights) that exact message.
+
 ### Skills (Claude skill format)
 Drop a folder into `skills/`, containing a `SKILL.md` with YAML frontmatter:
 
@@ -276,7 +279,8 @@ lib/
 routes/
   projects.js           projects / chats / attachments CRUD
   skills.js             skill listing endpoints
-  fs.js                 file-browser directory listings
+  fs.js                 file-browser listings, file preview, write-to-disk
+  search.js             search across project names, chat titles, messages
   ollama.js             health, models, update check, streaming chat
 public/
   index.html            single-page UI shell
@@ -290,6 +294,7 @@ public/
     status.js           health indicator, model list, update pill
     skills.js           skill catalog, toggles + "/" invocation
     skill-create.js     adding skills: template, model-written, import
+    search.js           search across projects/chats/messages, jump-to-result
     model-settings.js   per-project Ollama options (context, temperature, advanced)
     views.js            main-area view switching (welcome / projects / chat)
     modal.js            shared open/close behavior for backdrop modals

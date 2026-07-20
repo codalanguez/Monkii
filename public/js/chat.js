@@ -193,6 +193,16 @@ export function renderMessages() {
   updateChatCost();
 }
 
+/** Scroll a specific message into view and briefly flash it — used by search
+ *  to land you on the exact hit instead of just opening the chat at the top. */
+export function scrollToMessage(idx) {
+  const el = document.querySelector(`#messages .msg[data-idx="${idx}"]`);
+  if (!el) return;
+  el.scrollIntoView({ block: 'center' });
+  el.classList.add('msg-flash');
+  setTimeout(() => el.classList.remove('msg-flash'), 1600);
+}
+
 export async function send(bypassOverflow = false) {
   if (state.streaming) return;
   const input = $('#input');

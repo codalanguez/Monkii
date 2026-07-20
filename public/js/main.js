@@ -28,6 +28,7 @@ import { initHelpAbout } from './about.js';
 import { initConfirm } from './confirm.js';
 import { initFilePreview } from './filepreview.js';
 import { initSaveFile } from './savefile.js';
+import { initSearch, openSearch } from './search.js';
 
 function wireNavigation() {
   $('#btn-new-project').addEventListener('click', createProject);
@@ -38,6 +39,10 @@ function wireNavigation() {
   $('#btn-welcome-quick').addEventListener('click', quickChat);
   $('#btn-new-chat').addEventListener('click', newChat);
   $('#btn-clear-chat').addEventListener('click', () => clearChat());
+  $('#btn-search').addEventListener('click', openSearch);
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+  });
 }
 
 /** Skills modal, opened from the inspector, the rail, or the desktop menu. */
@@ -100,6 +105,7 @@ function wireFileBrowser() {
   $('#modal-backdrop').addEventListener('click', (e) => { if (e.target.id === 'modal-backdrop') closeBrowser(); });
   initFilePreview(); // file rows in the browser preview on click
   initSaveFile();
+  initSearch();
 }
 
 function wireComposer() {
